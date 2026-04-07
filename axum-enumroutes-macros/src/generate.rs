@@ -112,17 +112,31 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
                 ::axum_enumroutes::PathPattern::new(self.path()).url_for()
             }
 
-            pub fn add_to_router<S>(router: ::axum_enumroutes::__private::axum::Router<S>) -> ::axum_enumroutes::__private::axum::Router<S> where S: ::std::clone::Clone + ::std::marker::Send + ::std::marker::Sync + 'static {
+            pub fn add_to_router<S>(
+                router: ::axum_enumroutes::__private::axum::Router<S>
+            ) -> ::axum_enumroutes::__private::axum::Router<S>
+            where
+                S: ::std::clone::Clone + ::std::marker::Send + ::std::marker::Sync + 'static
+            {
                 router
                 #(#routes)*
             }
         }
 
-        impl<S: ::std::marker::Send + ::std::marker::Sync> ::axum_enumroutes::__private::axum::extract::FromRequestParts<S> for #ident {
+        impl<S: ::std::marker::Send + ::std::marker::Sync>
+            ::axum_enumroutes::__private::axum::extract::FromRequestParts<S> for #ident
+        {
             type Rejection = ::axum_enumroutes::__private::axum::http::StatusCode;
 
-            async fn from_request_parts(parts: &mut ::axum_enumroutes::__private::axum::http::request::Parts, _: &S) -> ::std::result::Result<Self, Self::Rejection> {
-                parts.extensions.get::<#ident>().cloned().ok_or(::axum_enumroutes::__private::axum::http::StatusCode::INTERNAL_SERVER_ERROR)
+            async fn from_request_parts(
+                parts: &mut ::axum_enumroutes::__private::axum::http::request::Parts,
+                _: &S,
+            ) -> ::std::result::Result<Self, Self::Rejection> {
+                parts
+                    .extensions
+                    .get::<#ident>()
+                    .cloned()
+                    .ok_or(::axum_enumroutes::__private::axum::http::StatusCode::INTERNAL_SERVER_ERROR)
             }
         }
 
@@ -149,15 +163,29 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
             }
         }
 
-        impl<S: ::std::marker::Send + ::std::marker::Sync> ::axum_enumroutes::__private::axum::extract::FromRequestParts<S> for #extractor_ident {
+        impl<S: ::std::marker::Send + ::std::marker::Sync>
+            ::axum_enumroutes::__private::axum::extract::FromRequestParts<S> for #extractor_ident
+        {
             type Rejection = ::axum_enumroutes::__private::axum::http::StatusCode;
 
-            async fn from_request_parts(parts: &mut ::axum_enumroutes::__private::axum::http::request::Parts, state: &S) -> ::std::result::Result<Self, Self::Rejection> {
-                use ::axum_enumroutes::__private::axum::{http::StatusCode, extract::{Path, Query}};
+            async fn from_request_parts(
+                parts: &mut ::axum_enumroutes::__private::axum::http::request::Parts,
+                state: &S,
+            ) -> ::std::result::Result<Self, Self::Rejection> {
+                use ::axum_enumroutes::__private::axum::extract::{Path, Query};
+                use ::axum_enumroutes::__private::axum::http::StatusCode;
 
-                let route = parts.extensions.get::<#ident>().cloned().ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
-                let Path(path_params) = Path::<Vec<(String, String)>>::from_request_parts(parts, state).await.map_err(|_| StatusCode::BAD_REQUEST)?;
-                let Query(query_params) = Query::<Vec<(String, String)>>::from_request_parts(parts, state).await.map_err(|_| StatusCode::BAD_REQUEST)?;
+                let route = parts
+                    .extensions
+                    .get::<#ident>()
+                    .cloned()
+                    .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
+                let Path(path_params) = Path::<Vec<(String, String)>>::from_request_parts(parts, state)
+                    .await
+                    .map_err(|_| StatusCode::BAD_REQUEST)?;
+                let Query(query_params) = Query::<Vec<(String, String)>>::from_request_parts(parts, state)
+                    .await
+                    .map_err(|_| StatusCode::BAD_REQUEST)?;
 
                 let mut url_for_self = route.url_for();
                 for (k, v) in path_params {
@@ -167,7 +195,10 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
                     url_for_self = url_for_self.query_param(k, v);
                 }
 
-                Ok(Self{route, url_for_self})
+                Ok(Self {
+                    route,
+                    url_for_self
+                })
             }
         }
     }
