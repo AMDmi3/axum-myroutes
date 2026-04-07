@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - { name: "Rust 1.88",    rust: "1.94",             cargo_args: "" }
+          - { name: "Rust 1.88",    rust: "1.88",             cargo_args: "-- --skip ui" }
           - { name: "Rust stable",  rust: stable,             cargo_args: "" }
           - { name: "Rust nightly", rust: nightly-2026-04-06, cargo_args: "--features=nightly -- --skip ui" }
       fail-fast: false
