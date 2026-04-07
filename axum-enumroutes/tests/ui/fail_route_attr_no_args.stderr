@@ -1,0 +1,6 @@
+error: enum variant missing route attribute
+  --> tests/ui/fail_route_attr_no_args.rs:13:5
+   |
+13 | /     #[get]
+14 | |     Index,
+   | |_________^

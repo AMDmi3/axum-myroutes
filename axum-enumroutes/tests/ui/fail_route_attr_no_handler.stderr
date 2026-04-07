@@ -1,0 +1,5 @@
+error: missing `handler` argument
+  --> tests/ui/fail_route_attr_no_handler.rs:13:5
+   |
+13 |     #[get("/")]
+   |     ^^^^^^^^^^^

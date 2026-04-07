@@ -1,0 +1,5 @@
+error: expected identifier
+  --> tests/ui/fail_root_attr_invalid_syntax.rs:11:10
+   |
+11 | #[routes(,)]
+   |          ^

@@ -1,0 +1,5 @@
+error: unknown argument `invalid`
+  --> tests/ui/fail_root_attr_invalid_key.rs:11:10
+   |
+11 | #[routes(invalid = foo)]
+   |          ^^^^^^^

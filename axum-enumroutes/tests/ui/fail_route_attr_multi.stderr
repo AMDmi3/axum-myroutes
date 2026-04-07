@@ -1,0 +1,5 @@
+error: multiple route attributes per variant are not allowed
+  --> tests/ui/fail_route_attr_multi.rs:14:5
+   |
+14 |     #[get("/", handler = _handler)]
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

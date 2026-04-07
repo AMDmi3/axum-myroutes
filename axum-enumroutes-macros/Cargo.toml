@@ -1,0 +1,25 @@
+[package]
+name = "axum-enumroutes-macros"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description.workspace = true
+rust-version.workspace = true
+license.workspace = true
+readme.workspace = true
+homepage.workspace = true
+repository.workspace = true
+documentation.workspace = true
+keywords.workspace = true
+
+[lib]
+proc-macro = true
+
+[features]
+nightly = []
+
+[dependencies]
+itertools = "0.14.0"
+proc-macro2 = "1.0.106"
+quote = { version = "1.0.45" }
+syn = { version = "2.0.117", default-features = false, features = ["extra-traits", "full", "parsing", "printing", "proc-macro"] }

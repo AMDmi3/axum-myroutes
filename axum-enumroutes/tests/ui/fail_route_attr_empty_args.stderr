@@ -1,0 +1,5 @@
+error: expected route path as the first argument
+  --> tests/ui/fail_route_attr_empty_args.rs:13:11
+   |
+13 |     #[get()]
+   |           ^
