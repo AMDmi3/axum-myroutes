@@ -52,9 +52,11 @@ async fn main() {
 
 This crate uses `#![forbid(unsafe_code)]` to ensure everything is implemented in 100% safe Rust.
 
-## Minimum supported Rust version
+## Supported Rust versions
 
-`axum-enumroutes` MSRV is 1.88.
+`axum-enumroutes` supports current stable Rust version and 2 most recent minor releases before it.
+Increasing MSRV is not considered a semver breaking change as long as it follows this policy.
+The current MSRV is 1.88.
 
 ## Documentation
 
