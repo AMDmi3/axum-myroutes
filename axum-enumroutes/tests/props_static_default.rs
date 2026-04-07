@@ -10,7 +10,7 @@ use axum_enumroutes::routes;
 
 #[derive_const(Default)]
 struct Props {
-    someprop: bool,
+    someprop: u64,
 }
 
 async fn _handler() -> &'static str {
@@ -22,7 +22,7 @@ async fn _handler() -> &'static str {
 enum Routes {
     #[get("/foo/{id}", handler = _handler)] // const Props::default is used
     Foo,
-    #[get("/bar/{id}", handler = _handler, props = Props { someprop: true })]
+    #[get("/bar/{id}", handler = _handler, props = Props { someprop: 1 })]
     Bar,
 }
 
@@ -30,8 +30,8 @@ enum Routes {
 fn test_props() {
     assert_eq!(Routes::Foo.path(), "/foo/{id}");
     assert_eq!(Routes::Foo.name(), "Foo");
-    assert_eq!(Routes::Foo.props().someprop, false);
+    assert_eq!(Routes::Foo.props().someprop, 0);
     assert_eq!(Routes::Bar.path(), "/bar/{id}");
     assert_eq!(Routes::Bar.name(), "Bar");
-    assert_eq!(Routes::Bar.props().someprop, true);
+    assert_eq!(Routes::Bar.props().someprop, 1);
 }
