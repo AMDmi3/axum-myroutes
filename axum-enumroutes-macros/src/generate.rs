@@ -112,7 +112,7 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
                 ::axum_enumroutes::PathPattern::new(self.path()).url_for()
             }
 
-            pub fn add_to_router(router: ::axum_enumroutes::__private::axum::Router) -> ::axum_enumroutes::__private::axum::Router {
+            pub fn add_to_router<S>(router: ::axum_enumroutes::__private::axum::Router<S>) -> ::axum_enumroutes::__private::axum::Router<S> where S: ::std::clone::Clone + ::std::marker::Send + ::std::marker::Sync + 'static {
                 router
                 #(#routes)*
             }
