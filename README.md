@@ -48,6 +48,10 @@ async fn main() {
 }
 ```
 
+## Safety
+
+This crate uses `#![forbid(unsafe_code)]` to ensure everything is implemented in 100% safe Rust.
+
 ## Documentation
 
 See https://docs.rs/axum-enumroutes/latest/axum-enumroutes/ for complete documentation.

@@ -142,6 +142,8 @@
 //! }
 //! ```
 
+#![forbid(unsafe_code)]
+
 use indexmap::IndexMap;
 use std::collections::HashMap;
 
