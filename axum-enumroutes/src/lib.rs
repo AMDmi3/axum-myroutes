@@ -199,7 +199,7 @@ use std::collections::HashMap;
 ///
 /// # Requirements
 ///
-/// - Enum must be non-generic and clonable (since the enum is trivial,
+/// - Enum must be non-generic and cloneable (since the enum is trivial,
 ///   you may want to derive `Copy` as well).
 /// - Variants must not contain any data fields or a discriminant,
 ///   each variant must have a single route attribute.
@@ -208,7 +208,7 @@ use std::collections::HashMap;
 ///
 /// - `state_type` (default is unit type (`()`)) - type for route state. If you
 ///   call `.with_state()` on the router, it should be the same type.
-/// - `props_type` (default is unit type (`()`)) - type for route properies.
+/// - `props_type` (default is unit type (`()`)) - type for route properties.
 ///   When defined, you can set properties for each route with `props` parameter
 ///   on its route attribute.
 /// - `static_props` (default false) - whether route properties are statically
@@ -219,7 +219,7 @@ use std::collections::HashMap;
 ///   in which case you may
 ///
 /// Note that `static_props = true, default_props = true` case currently requires
-/// rust nighly and `nighly` feature enabled for this crate, as it depends on a
+/// rust nightly and `nightly` feature enabled for this crate, as it depends on a
 /// bunch of unstable features.
 ///
 /// # Route attributes

@@ -2,7 +2,7 @@
 
 This crate provides convenient and reliable way to work with routes in `axum`. Define routes along with their methods, paths and handlers in an enum, add these to `axum::Router` with a single call, then refer to any route (and construct a link to it) via corresponding enum variant, which provides compile time checked internal links for your application. Also, axum extractor is provided for handlers to be aware of their routes, and capable of constructing links to themselves.
 
-## Featues
+## Features
 
 - Specify routes as enum, refer to routes via enum variants.
 - Query route info, and construct path to a route, specifying/overriding path parameters, query parameters and fragment.
