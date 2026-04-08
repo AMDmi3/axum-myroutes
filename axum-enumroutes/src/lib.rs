@@ -44,7 +44,7 @@
 //! #[tokio::main]
 //! async fn main() {
 //!     // Add all routes from enum to an axum::Router
-//!     let app = Route::add_to_router(axum::Router::new());
+//!     let app = Route::to_router();
 //!     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
 //!     axum::serve(listener, app).await.unwrap();
 //! }
@@ -73,7 +73,7 @@
 //! #[tokio::main]
 //! async fn main() {
 //!     // Add all routes from enum to an axum::Router
-//!     let app = Route::add_to_router(axum::Router::new()).with_state(AppState{});
+//!     let app = Route::to_router().with_state(AppState{});
 //!     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
 //!     axum::serve(listener, app).await.unwrap();
 //! }
@@ -242,11 +242,16 @@ use std::collections::HashMap;
 ///   `props() -> &'static <props_type>` (`static_props` is trie) - returns properties
 ///   defined for a route.
 /// - `url_for() -> PathBuilder` - return a path constructor for this route.
-/// - `add_to_router(router: axum::Router) -> axum::Router` - add routes from this enum
-///   to an axum router, returning an updated router.
+/// - `to_router() -> axum::Router` - create axum router with specified routes.
+/// - `to_router_with(f: Fn(axum::Router) -> axum::Router) -> axum::Router` - create
+///   axum router with custom modifications (such as adding middleware). This is required
+///   to ensure layer ordering, as layers which use route extractor must be registered
+///   before a layer which adds corresponding extension. In other words, to add middleware
+///   with access to route extractor, you must add it through this method, and not on
+///   the already constructed router.
 ///
 /// Additionally, extractor type is generated, named with `Self` prefix (e.g.
-/// `SelfRoute` for `enum Route`), with the same methods except for `add_to_router`.
+/// `SelfRoute` for `enum Route`), with the same methods except for `to_router*`.
 /// Unlike the route enum variant, `url_for()` for this type returns path constructor
 /// with parameters already filled from the current request, so you can construct URL
 /// to self from it right away, or override some parameters if necessary.

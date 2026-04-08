@@ -17,15 +17,13 @@ enum Route {
 
 async fn middleware(route: SelfRoute, request: Request, next: Next) -> impl IntoResponse {
     assert_eq!(route.name(), "Foo");
-    let response = next.run(request).await;
-    response
+    next.run(request).await
 }
 
 #[tokio::test]
-#[ignore = "not implemented yet"]
 async fn test_middleware() {
     let router =
-        Route::add_to_router(axum::Router::new()).route_layer(middleware::from_fn(middleware));
+        Route::to_router_with(|router| router.route_layer(middleware::from_fn(middleware)));
     let test_server = axum_test::TestServer::new(router);
     let _ = test_server.get("/").await;
 }

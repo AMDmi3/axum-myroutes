@@ -18,5 +18,5 @@ enum Route {
 
 #[tokio::test]
 async fn test_routes_and_extractors() {
-    let _: axum::Router<()> = Route::add_to_router(axum::Router::new()).with_state(AppState {});
+    let _: axum::Router<()> = Route::to_router().with_state(AppState {});
 }

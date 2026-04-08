@@ -43,7 +43,7 @@ async fn bar(route: SelfRoute, Path(id): Path<u64>) -> String {
 
 #[tokio::test]
 async fn test_routes_and_extractors() {
-    let router = Route::add_to_router(axum::Router::new());
+    let router = Route::to_router();
     let test_server = axum_test::TestServer::new(router);
 
     let response = test_server.get("/foo/1").await;

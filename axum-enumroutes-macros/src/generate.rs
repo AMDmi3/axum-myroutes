@@ -69,25 +69,23 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
             }
         }
 
+        // We need specific layer ordering: for the route extractor to work in the
+        // middleware, layer adding route extension must come AFTER all the layer
+        // which may use it.
         routes.push(quote! {
-            .route(
-                #ident::#variant_ident.path(),
-                ::axum_enumroutes::__private::axum::routing::#method_router_ident(
-                    #variant_handler
+            .merge(
+                f(
+                    ::axum_enumroutes::__private::axum::Router::<#state_type>::new()
+                    .route(
+                        #ident::#variant_ident.path(),
+                        ::axum_enumroutes::__private::axum::routing::#method_router_ident(
+                            #variant_handler
+                        )
+                    )
                 )
                 .layer(
-                    // This adds the route as an extension to both request and response
-                    // The former can be used by the extractor, while the latter can be used by
-                    // the middleware, which won't have access to request extension due to layer
-                    // ordering
-                    ::axum_enumroutes::__private::axum::middleware::from_fn(
-                        async |mut request: ::axum_enumroutes::__private::axum::extract::Request,
-                               next: ::axum_enumroutes::__private::axum::middleware::Next| {
-                            request.extensions_mut().insert(#ident::#variant_ident);
-                            let mut response = next.run(request).await;
-                            response.extensions_mut().insert(#ident::#variant_ident);
-                            response
-                        }
+                    ::axum_enumroutes::__private::axum::Extension(
+                        #ident::#variant_ident
                     )
                 )
             )
@@ -123,21 +121,17 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
                 ::axum_enumroutes::PathPattern::new(self.path()).url_for()
             }
 
-            // We could make this one generic on S: Clone + Send + Sync + 'static
-            // and take/return axum::Router::<S>, however that won't work because
-            // - given handler(_: axum::extract::State<MyAppState>)
-            // - get(handler) would produce MethodRouter<MyAppState>
-            // - axum::Router<S> won't accept it unless S is bounded to MyAppState
-            // - but we can't get MyAppState from handler
-            // Maybe adding assoc. type to axum::Handler would help, experiments needed
-            // for now, solely because of this problem, we require state type to be
-            // specified in #[route]
-            pub fn add_to_router(
-                router: ::axum_enumroutes::__private::axum::Router::<#state_type>
-            ) -> ::axum_enumroutes::__private::axum::Router::<#state_type>
+            pub fn to_router_with<F>(f: F) -> ::axum_enumroutes::__private::axum::Router::<#state_type>
+                where F: Fn(
+                    ::axum_enumroutes::__private::axum::Router::<#state_type>
+                ) -> ::axum_enumroutes::__private::axum::Router::<#state_type>
             {
-                router
+                axum_enumroutes::__private::axum::Router::new()
                 #(#routes)*
+            }
+
+            pub fn to_router() -> ::axum_enumroutes::__private::axum::Router::<#state_type> {
+                Self::to_router_with(std::convert::identity)
             }
         }
 

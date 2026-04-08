@@ -42,7 +42,7 @@ async fn item_by_id(route: SelfRoute) {
 #[tokio::main]
 async fn main() {
     // Add all routes from enum to an axum::Router
-    let app = Route::add_to_router(axum::Router::new());
+    let app = Route::to_router();
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }
