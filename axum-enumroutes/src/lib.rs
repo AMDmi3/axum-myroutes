@@ -50,6 +50,35 @@
 //! }
 //! ```
 //!
+//! ## Router with state
+//!
+//! If router with state is used (e.g. `.with_state()` is called on a router), the
+//! state type must be passed to `#[routes]` argument:
+//!
+//! ```no_run
+//! use axum_enumroutes::routes;
+//!
+//! #[derive(Clone)]
+//! struct AppState;
+//!
+//! async fn handler(_: axum::extract::State<AppState>) {}
+//!
+//! #[derive(Clone, Copy)]
+//! #[routes(state_type = AppState)]
+//! enum Route {
+//!     #[get("/", handler = handler)]
+//!     Home,
+//! }
+//!
+//! #[tokio::main]
+//! async fn main() {
+//!     // Add all routes from enum to an axum::Router
+//!     let app = Route::add_to_router(axum::Router::new()).with_state(AppState{});
+//!     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+//!     axum::serve(listener, app).await.unwrap();
+//! }
+//! ```
+//!
 //! ## Route methods and path construction
 //!
 //! `#[routes]` enum has methods to query information related to route and to construct
@@ -177,6 +206,8 @@ use std::collections::HashMap;
 ///
 /// # Macro attribute arguments
 ///
+/// - `state_type` (default is unit type (`()`)) - type for route state. If you
+///   call `.with_state()` on the router, it should be the same type.
 /// - `props_type` (default is unit type (`()`)) - type for route properies.
 ///   When defined, you can set properties for each route with `props` parameter
 ///   on its route attribute.

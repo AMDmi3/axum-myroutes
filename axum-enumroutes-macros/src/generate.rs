@@ -10,6 +10,7 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
     let vis = &r#enum.vis;
     let ident = &r#enum.ident;
     let extractor_ident = quote::format_ident!("Self{}", &r#enum.ident);
+    let state_type = &r#enum.state_type;
     let props_type = &r#enum.props_type;
 
     let mut enum_variants = vec![];
@@ -112,11 +113,18 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
                 ::axum_enumroutes::PathPattern::new(self.path()).url_for()
             }
 
-            pub fn add_to_router<S>(
-                router: ::axum_enumroutes::__private::axum::Router<S>
-            ) -> ::axum_enumroutes::__private::axum::Router<S>
-            where
-                S: ::std::clone::Clone + ::std::marker::Send + ::std::marker::Sync + 'static
+            // We could make this one generic on S: Clone + Send + Sync + 'static
+            // and take/return axum::Router::<S>, however that won't work because
+            // - given handler(_: axum::extract::State<MyAppState>)
+            // - get(handler) would produce MethodRouter<MyAppState>
+            // - axum::Router<S> won't accept it unless S is bounded to MyAppState
+            // - but we can't get MyAppState from handler
+            // Maybe adding assoc. type to axum::Handler would help, experiments needed
+            // for now, solely because of this problem, we require state type to be
+            // specified in #[route]
+            pub fn add_to_router(
+                router: ::axum_enumroutes::__private::axum::Router::<#state_type>
+            ) -> ::axum_enumroutes::__private::axum::Router::<#state_type>
             {
                 router
                 #(#routes)*

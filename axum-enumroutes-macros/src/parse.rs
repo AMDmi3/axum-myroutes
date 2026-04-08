@@ -131,6 +131,7 @@ fn parse_variant(variant: syn::Variant) -> syn::Result<Variant> {
 }
 
 struct RootAttributeArgs {
+    pub state_type: syn::Type,
     pub props_type: syn::Type,
     pub static_props: bool,
     pub default_props: bool,
@@ -138,6 +139,7 @@ struct RootAttributeArgs {
 
 fn parse_root_attribute_args(attr: TokenStream) -> syn::Result<RootAttributeArgs> {
     let mut res = RootAttributeArgs {
+        state_type: syn::parse_quote!(()),
         props_type: syn::parse_quote!(()),
         static_props: false,
         default_props: true,
@@ -149,6 +151,9 @@ fn parse_root_attribute_args(attr: TokenStream) -> syn::Result<RootAttributeArgs
                 let key: syn::Ident = input.parse()?;
                 input.parse::<syn::Token![=]>()?;
                 match key.to_string().as_str() {
+                    "state_type" => {
+                        res.state_type = input.parse()?;
+                    }
                     "props_type" => {
                         res.props_type = input.parse()?;
                     }
@@ -200,6 +205,7 @@ pub fn parse_enum(attr: TokenStream, item: TokenStream) -> syn::Result<Enum> {
         vis: r#enum.vis,
         ident: r#enum.ident,
         variants,
+        state_type: root_attribute_args.state_type,
         props_type: root_attribute_args.props_type,
         static_props: root_attribute_args.static_props,
         default_props: root_attribute_args.default_props,

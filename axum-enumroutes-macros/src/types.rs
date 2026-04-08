@@ -38,6 +38,7 @@ pub struct Enum {
     pub vis: syn::Visibility,
     pub ident: syn::Ident,
     pub variants: Vec<Variant>,
+    pub state_type: syn::Type,
     pub props_type: syn::Type,
     pub static_props: bool,
     pub default_props: bool,
