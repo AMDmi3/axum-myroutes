@@ -4,6 +4,7 @@
 use proc_macro::TokenStream;
 use quote::quote;
 
+use crate::path::PathSegment;
 use crate::types::{Enum, Method};
 
 pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
@@ -18,6 +19,7 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
     let mut name_matches = vec![];
     let mut props_matches = vec![];
     let mut routes = vec![];
+    let mut path_segment_matches = vec![];
 
     let props_return_type = if r#enum.static_props {
         quote! { &'static #props_type }
@@ -37,7 +39,7 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
         let variant_ident = &variant.ident;
         let variant_ident_name = variant_ident.to_string();
         let variant_other_attributes = &variant.other_attributes;
-        let variant_path = &variant.route.path;
+        let variant_path = variant.route.path.to_string();
         let variant_handler = &variant.route.handler;
         let method_router_ident = match &variant.route.method {
             Method::Get => quote::format_ident!("get"),
@@ -68,6 +70,28 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
                 });
             }
         }
+
+        let path_segments: Vec<_> = variant
+            .route
+            .path
+            .segments
+            .iter()
+            .map(|segment| match segment {
+                PathSegment::Static(s) => {
+                    quote! {::axum_enumroutes::__private::PathSegment::Static(#s) }
+                }
+                PathSegment::Param(s) => {
+                    quote! {::axum_enumroutes::__private::PathSegment::Param(#s) }
+                }
+                PathSegment::CatchAllParam(s) => {
+                    quote! {::axum_enumroutes::__private::PathSegment::CatchAllParam(#s) }
+                }
+            })
+            .collect();
+
+        path_segment_matches.push(quote! {
+            #ident::#variant_ident => { static VALUE: &[::axum_enumroutes::__private::PathSegment] = &[#(#path_segments),*]; VALUE },
+        });
 
         // We need specific layer ordering: for the route extractor to work in the
         // middleware, layer adding route extension must come AFTER all the layer
@@ -118,7 +142,11 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
             }
 
             pub fn url_for(&self) -> ::axum_enumroutes::PathBuilder {
-                ::axum_enumroutes::PathPattern::new(self.path()).url_for()
+                ::axum_enumroutes::PathBuilder::new(
+                    match self {
+                        #(#path_segment_matches)*
+                    }
+                )
             }
 
             pub fn to_router_with<F>(f: F) -> ::axum_enumroutes::__private::axum::Router::<#state_type>

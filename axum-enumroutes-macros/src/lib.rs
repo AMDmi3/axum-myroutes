@@ -5,6 +5,7 @@
 
 mod generate;
 mod parse;
+mod path;
 mod types;
 
 use proc_macro::TokenStream;

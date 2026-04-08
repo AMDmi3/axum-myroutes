@@ -1,0 +1,27 @@
+error: empty parameter name not allowed
+  --> tests/ui/fail_route_invalid_path.rs:13:11
+   |
+13 |     #[get("/{}", handler = _handler)]
+   |           ^^^^^
+
+error[E0425]: cannot find type `Route` in this scope
+  --> tests/ui/fail_route_invalid_path.rs:10:10
+   |
+10 | #[derive(Clone)]
+   |          ^^^^^ not found in this scope
+   |
+help: consider importing this struct
+   |
+ 4 + use axum::routing::Route;
+   |
+
+error[E0433]: failed to resolve: use of undeclared type `Route`
+  --> tests/ui/fail_route_invalid_path.rs:10:10
+   |
+10 | #[derive(Clone)]
+   |          ^^^^^ use of undeclared type `Route`
+   |
+help: consider importing this struct
+   |
+ 4 + use axum::routing::Route;
+   |

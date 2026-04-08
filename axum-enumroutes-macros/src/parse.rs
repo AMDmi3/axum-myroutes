@@ -5,6 +5,7 @@ use itertools::Itertools;
 use proc_macro::TokenStream;
 use syn::{ItemEnum, parse::ParseStream, spanned::Spanned};
 
+use crate::path::Path;
 use crate::types::{Enum, Route, Variant};
 
 #[allow(clippy::large_enum_variant, reason = "should not matter much")]
@@ -23,22 +24,19 @@ fn parse_variant_attribute(attr: &syn::Attribute) -> syn::Result<AttributeKind> 
         if let Some(attr_name) = attr_name
             && let Ok(method) = attr_name.parse()
         {
-            let mut path: Option<String> = None;
+            let mut path: Option<Path> = None;
             let mut handler: Option<syn::Expr> = None;
             let mut props: Option<syn::Expr> = None;
 
             attr.parse_args_with(|input: ParseStream| {
-                path = Some(
-                    input
-                        .parse::<syn::LitStr>()
-                        .map_err(|e| {
-                            syn::Error::new(
-                                e.span(),
-                                "expected route path as the first argument".to_string(),
-                            )
-                        })?
-                        .value(),
-                );
+                path = Some(Path::parse(&input.parse::<syn::LitStr>().map_err(
+                    |e| {
+                        syn::Error::new(
+                            e.span(),
+                            "expected route path as the first argument".to_string(),
+                        )
+                    },
+                )?)?);
 
                 while input.peek(syn::Token![,]) {
                     input.parse::<syn::Token![,]>()?;

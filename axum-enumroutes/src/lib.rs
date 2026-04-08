@@ -260,104 +260,18 @@ pub use axum_enumroutes_macros::routes;
 #[doc(hidden)]
 pub mod __private {
     pub use axum;
-}
 
-#[derive(Clone)]
-enum PathSegment {
-    Static(String),
-    Param(String),
-}
-
-#[derive(thiserror::Error, Debug, Clone)]
-pub enum PathParsingError {
-    #[error("empty parameter name")]
-    EmptyParamName,
-    #[error("invalid path syntax")]
-    InvalidPathSyntax,
+    pub enum PathSegment {
+        Static(&'static str),
+        Param(&'static str),
+        CatchAllParam(&'static str),
+    }
 }
 
 #[derive(thiserror::Error, Debug)]
 pub enum PathConstructionError {
     #[error("missing path parameter {0}")]
-    MissingPathParam(String),
-    #[error("cannot parse route path")]
-    PathParsingError(#[from] PathParsingError),
-}
-
-#[doc(hidden)]
-#[derive(Clone)]
-pub struct PathPattern {
-    segments: Vec<PathSegment>,
-    deferred_parsing_error: Option<PathParsingError>,
-}
-
-impl PathPattern {
-    pub fn new(path: &str) -> Self {
-        match Self::try_new(path) {
-            Ok(s) => s,
-            Err(e) => PathPattern {
-                segments: vec![],
-                deferred_parsing_error: Some(e),
-            },
-        }
-    }
-
-    pub fn try_new(path: &str) -> Result<Self, PathParsingError> {
-        let mut segments = vec![];
-        let mut current = String::new();
-        let mut in_param = false;
-        let mut iter = path.chars().peekable();
-
-        loop {
-            match iter.next() {
-                Some('{') => {
-                    if in_param {
-                        return Err(PathParsingError::InvalidPathSyntax);
-                    } else if iter.peek() == Some(&'{') {
-                        current += "{";
-                        iter.next();
-                    } else if iter.peek().is_none() {
-                        return Err(PathParsingError::InvalidPathSyntax);
-                    } else {
-                        if !current.is_empty() {
-                            segments.push(PathSegment::Static(std::mem::take(&mut current)));
-                        }
-                        in_param = true;
-                    }
-                }
-                Some('}') => {
-                    if in_param {
-                        if current.is_empty() {
-                            return Err(PathParsingError::EmptyParamName);
-                        }
-                        segments.push(PathSegment::Param(std::mem::take(&mut current)));
-                        in_param = false;
-                    } else if iter.peek() == Some(&'}') {
-                        current += "}";
-                        iter.next();
-                    } else {
-                        return Err(PathParsingError::InvalidPathSyntax);
-                    }
-                }
-                Some(c) => {
-                    current.push(c);
-                }
-                None => {
-                    if !current.is_empty() {
-                        segments.push(PathSegment::Static(current));
-                    }
-                    return Ok(Self {
-                        segments,
-                        deferred_parsing_error: None,
-                    });
-                }
-            }
-        }
-    }
-
-    pub fn url_for(self) -> PathBuilder {
-        PathBuilder::new(self)
-    }
+    MissingPathParam(&'static str),
 }
 
 /// Route path builder.
@@ -366,7 +280,7 @@ impl PathPattern {
 /// values and construct a complete path.
 #[derive(Clone)]
 pub struct PathBuilder {
-    path_pattern: PathPattern,
+    path_segments: &'static [__private::PathSegment],
     path_params: HashMap<String, String>,
     query_params: IndexMap<String, String>,
     fragment: Option<String>,
@@ -374,9 +288,9 @@ pub struct PathBuilder {
 
 impl PathBuilder {
     #[doc(hidden)]
-    pub fn new(path_pattern: PathPattern) -> Self {
+    pub fn new(path_segments: &'static [__private::PathSegment]) -> Self {
         Self {
-            path_pattern,
+            path_segments,
             path_params: Default::default(),
             query_params: Default::default(),
             fragment: None,
@@ -425,25 +339,25 @@ impl PathBuilder {
     /// Fails if corresponding path pattern is invalid, or if required path
     /// parameter was not provided.
     pub fn build(&self) -> Result<String, PathConstructionError> {
-        if let Some(error) = &self.path_pattern.deferred_parsing_error {
-            return Err(error.clone().into());
-        };
-
         let mut res = String::new();
-        for segment in &self.path_pattern.segments {
+        for segment in self.path_segments {
+            use __private::PathSegment;
             match segment {
-                PathSegment::Static(s) => {
-                    res += s;
+                PathSegment::Static(text) => {
+                    res += text;
                 }
                 PathSegment::Param(key) => {
-                    if let Some(key) = key.strip_prefix('*')
-                        && let Some(value) = self.path_params.get(key)
-                    {
-                        res += &url_escape::encode_path(&value);
-                    } else if let Some(value) = self.path_params.get(key) {
-                        res += &url_escape::encode_component(&value);
+                    if let Some(value) = self.path_params.get(*key) {
+                        res += &url_escape::encode_component(value);
                     } else {
-                        return Err(PathConstructionError::MissingPathParam(key.clone()));
+                        return Err(PathConstructionError::MissingPathParam(key));
+                    }
+                }
+                PathSegment::CatchAllParam(key) => {
+                    if let Some(value) = self.path_params.get(*key) {
+                        res += &url_escape::encode_path(value);
+                    } else {
+                        return Err(PathConstructionError::MissingPathParam(key));
                     }
                 }
             }
@@ -471,12 +385,22 @@ impl PathBuilder {
 
 #[cfg(test)]
 mod tests {
+    use __private::PathSegment;
+
     use super::*;
 
     #[test]
-    fn test_basic_parse_build() {
-        let path = PathPattern::new("/static/{{}}/a{foo}/{bar}b/c{baz}c")
-            .url_for()
+    fn test_basic_build() {
+        static SEGMENTS: &[PathSegment] = &[
+            PathSegment::Static("/static/{}/a"),
+            PathSegment::Param("foo"),
+            PathSegment::Static("/"),
+            PathSegment::Param("bar"),
+            PathSegment::Static("b/c"),
+            PathSegment::CatchAllParam("baz"),
+            PathSegment::Static("c"),
+        ];
+        let path = PathBuilder::new(SEGMENTS)
             .param("foo", "1")
             .param("bar", 2)
             .param("baz", String::from("3"))
@@ -489,64 +413,32 @@ mod tests {
     }
 
     #[test]
-    fn test_parsing() -> Result<(), anyhow::Error> {
+    fn test_escaping_param() {
+        static SEGMENTS: &[PathSegment] = &[PathSegment::Param("a")];
         assert_eq!(
-            PathPattern::try_new("").unwrap().url_for().build().unwrap(),
-            ""
-        );
-        assert_eq!(PathPattern::try_new("{{")?.url_for().build()?, "{");
-        assert_eq!(PathPattern::try_new("}}")?.url_for().build()?, "}");
-        assert_eq!(
-            PathPattern::try_new("{a}")?
-                .url_for()
-                .param("a", "1")
-                .build()?,
-            "1"
-        );
-        assert_eq!(
-            PathPattern::try_new("{a}{b}")?
-                .url_for()
-                .param("a", "1")
-                .param("b", "2")
-                .build()?,
-            "12"
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn test_parsing_errors() {
-        assert!(PathPattern::try_new("/{}").is_err());
-        assert!(PathPattern::try_new("/{").is_err());
-        assert!(PathPattern::try_new("/}").is_err());
-        assert!(PathPattern::try_new("/{foo{}}").is_err());
-        assert!(PathPattern::try_new("/{foo{{}}}").is_err());
-        assert!(PathPattern::try_new("/{foo}}").is_err());
-        assert!(PathPattern::try_new("/{{foo}").is_err());
-    }
-
-    #[test]
-    fn test_escaping() -> Result<(), anyhow::Error> {
-        assert_eq!(
-            PathPattern::new("{a}")
-                .url_for()
+            PathBuilder::new(SEGMENTS)
                 .param("a", "/%20#")
-                .build()?,
+                .build()
+                .unwrap(),
             "%2F%2520%23"
         );
-        assert_eq!(
-            PathPattern::new("{*a}")
-                .url_for()
-                .param("a", "/%20#")
-                .build()?,
-            "/%20%23"
-        );
-        Ok(())
     }
 
     #[test]
-    fn test_construction_errors() -> Result<(), anyhow::Error> {
-        assert!(PathPattern::try_new("{a}")?.url_for().build().is_err());
-        Ok(())
+    fn test_escaping_catch_all_param() {
+        static SEGMENTS: &[PathSegment] = &[PathSegment::CatchAllParam("a")];
+        assert_eq!(
+            PathBuilder::new(SEGMENTS)
+                .param("a", "/%20#")
+                .build()
+                .unwrap(),
+            "/%20%23"
+        );
+    }
+
+    #[test]
+    fn test_construction_errors() {
+        static SEGMENTS: &[PathSegment] = &[PathSegment::Param("a")];
+        assert!(PathBuilder::new(SEGMENTS).build().is_err());
     }
 }

@@ -3,6 +3,8 @@
 
 use std::str::FromStr;
 
+use crate::path::Path;
+
 pub enum Method {
     Get,
     Post,
@@ -23,7 +25,7 @@ impl FromStr for Method {
 
 pub struct Route {
     pub method: Method,
-    pub path: String,
+    pub path: Path,
     pub handler: syn::Expr,
     pub props: Option<syn::Expr>,
 }
