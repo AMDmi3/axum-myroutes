@@ -76,8 +76,18 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
                     #variant_handler
                 )
                 .layer(
-                    ::axum_enumroutes::__private::axum::Extension(
-                        #ident::#variant_ident
+                    // This adds the route as an extension to both request and response
+                    // The former can be used by the extractor, while the latter can be used by
+                    // the middleware, which won't have access to request extension due to layer
+                    // ordering
+                    ::axum_enumroutes::__private::axum::middleware::from_fn(
+                        async |mut request: ::axum_enumroutes::__private::axum::extract::Request,
+                               next: ::axum_enumroutes::__private::axum::middleware::Next| {
+                            request.extensions_mut().insert(#ident::#variant_ident);
+                            let mut response = next.run(request).await;
+                            response.extensions_mut().insert(#ident::#variant_ident);
+                            response
+                        }
                     )
                 )
             )
