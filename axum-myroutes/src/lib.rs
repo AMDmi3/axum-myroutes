@@ -12,38 +12,41 @@
 //! # Example
 //!
 //! ```no_run
+//! use axum::extract::Path;
 //! use axum_myroutes::routes;
 //!
 //! // Specify routes
 //! #[derive(Clone, Copy)]
 //! #[routes]
 //! enum Route {
+//!     #[get("/", handler = home)]
+//!     Home,
 //!     #[get("/items/{id}", handler = item_by_id)]
 //!     ItemById,
 //! }
 //!
-//! # fn test() {
-//! // Inspect routes and construct paths
-//! assert_eq!(Route::ItemById.path(), "/items/{id}");
-//! assert_eq!(Route::ItemById.name(), "ItemById");
-//! // Parameter needs to be specified
-//! assert!(Route::ItemById.url_for().build().is_err());
-//! assert_eq!(Route::ItemById.url_for().param("id", 1).build().unwrap(), "/items/1".to_string());
-//! # }
+//! async fn home() -> String {
+//!     // Construct links to routes
+//!     format!(
+//!         "<a href={}>To first item</a>",
+//!         Route::ItemById.url_for().param("id", 1).build().unwrap()
+//!     )
+//! }
 //!
-//! // `My``Route` is an extractor generated for `Route` enum
-//! async fn item_by_id(route: MyRoute) {
-//!     assert_eq!(route.path(), "/items/{id}");
-//!     assert_eq!(route.name(), "ItemById");
-//!     // Current parameters are already filled...
-//!     assert!(route.url_for().build().is_ok());
-//!     // ...but may be overwritten
-//!     assert_eq!(route.url_for().param("id", 2).build().unwrap(), "/items/2".to_string());
+//! // My{...} extractor is generated for the enum
+//! async fn item_by_id(route: MyRoute, Path(id): Path<u64>) -> String {
+//!     format!(
+//!         "<a href={}>To home</a><a href={}>To self</a><a href={}>To next</a>",
+//!         Route::Home.url_for().build().unwrap(),
+//!         // Construct links to current route, parameters are already filled...
+//!         route.url_for().build().unwrap(),
+//!         // ...but can be modified
+//!         route.url_for().param("id", id + 1).build().unwrap(),
+//!     )
 //! }
 //!
 //! #[tokio::main]
 //! async fn main() {
-//!     // Add all routes from enum to an axum::Router
 //!     let app = Route::to_router();
 //!     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
 //!     axum::serve(listener, app).await.unwrap();
@@ -59,25 +62,27 @@
 //!
 //! ```
 //! # use axum_myroutes::routes;
-//! # async fn _handler(){}
-//! #[derive(Clone, Copy)]
-//! #[routes]
-//! enum Route {
-//!     #[get("/{id}", handler = _handler)]
-//!     ItemById,
-//! }
-//!
+//! # async fn handler(){}
+//! # #[derive(Clone, Copy)]
+//! # #[routes]
+//! # enum Route {
+//! #     #[get("/{id}", handler = handler)]
+//! #     ItemById,
+//! # }
+//! #
+//! // Get route path (pattern)
 //! assert_eq!(Route::ItemById.path(), "/{id}");
+//!
+//! // Get route name (name of enum variant)
 //! assert_eq!(Route::ItemById.name(), "ItemById");
 //!
-//! assert_eq!(
-//!     Route::ItemById.url_for().param("id", 123).build().unwrap(),
-//!     "/123".to_string()
-//! );
-//! assert!(
-//!     // required parameter id is missing
-//!     Route::ItemById.url_for().build().is_err()
-//! );
+//! // Construct url
+//! assert_eq!(Route::ItemById.url_for().param("id", 123).build().unwrap(), "/123");
+//!
+//! // Error on missing parameter
+//! assert!(Route::ItemById.url_for().build().is_err());
+//!
+//! // Can also set query params and fragment
 //! assert_eq!(
 //!     Route::ItemById
 //!         .url_for()
@@ -86,59 +91,65 @@
 //!         .fragment("frag")
 //!         .build()
 //!         .unwrap(),
-//!     "/123?foo=bar#frag".to_string()
+//!     "/123?foo=bar#frag"
 //! );
 //! ```
 //!
 //! ## Route props
 //!
 //! A type to store additional route properties can be provided, set per-route, and
-//! retrieved with route method:
+//! retrieved with route method.
+//!
+//! There are options to toggle `Default` requirement on props type, and to allow
+//! static construction of props, enabled through [`routes`] arguments.
 //!
 //! ```
 //! # use axum_myroutes::routes;
-//! # async fn _handler(){}
+//! # async fn handler(){}
 //! #[derive(Default)]
 //! struct RouteProps {
-//!     requires_auth: bool,
+//!     require_auth: bool,
 //! }
 //!
 //! #[derive(Clone, Copy)]
 //! #[routes(props_type = RouteProps)]
 //! enum Route {
-//!     #[get("/", handler = _handler)]
+//!     #[get("/public", handler = handler)]
 //!     Public,
-//!     #[get("/private", handler = _handler, props = RouteProps { requires_auth: true, ..Default::default() })]
+//!     #[get("/private", handler = handler, props = RouteProps { require_auth: true })]
 //!     Private,
 //! }
 //!
-//! assert_eq!(Route::Public.props().requires_auth, false);
-//! assert_eq!(Route::Private.props().requires_auth, true);
+//! assert_eq!(Route::Public.props().require_auth, false);
+//! assert_eq!(Route::Private.props().require_auth, true);
 //! ```
-//!
-//! There are options to toggle `Default` requirement on props type, and to allow
-//! static construction of props, enabled through [`routes`] arguments.
 //!
 //! ## Extractors
 //!
+//! Extractor type is automatically provided for the route enum, with the same
+//! name prefixed with `My`.
+//!
 //! ```
 //! # use axum_myroutes::routes;
-//! // MyRoute extractor provided for Route enum
+//! # #[derive(Default)]
+//! # struct RouteProps {
+//! #     require_auth: bool,
+//! # }
+//! # #[derive(Clone, Copy)]
+//! # #[routes(props_type = RouteProps)]
+//! # enum Route {
+//! #     #[get("/{id}", handler = item_by_id)]
+//! #     ItemById,
+//! # }
 //! async fn item_by_id(route: MyRoute) {
 //!     // Same methods as route variant
 //!     assert_eq!(route.path(), "/");
-//!     assert_eq!(route.name(), "Home");
+//!     assert_eq!(route.name(), "ItemById");
+//!     assert_eq!(route.props().require_auth, false);
 //!
 //!     // In extractor, parameters are already filled,
 //!     // so path to self can be constructed right away
 //!     assert!(route.url_for().build().is_ok());
-//! }
-//!
-//! #[derive(Clone, Copy)]
-//! #[routes]
-//! enum Route {
-//!     #[get("/{id}", handler = item_by_id)]
-//!     ItemById,
 //! }
 //! ```
 //!
@@ -148,15 +159,13 @@
 //! state type must be passed to `#[routes]` argument:
 //!
 //! ```no_run
-//! use axum_myroutes::routes;
-//!
+//! # use axum_myroutes::routes;
 //! #[derive(Clone)]
 //! struct AppState;
 //!
-//! async fn handler(_: axum::extract::State<AppState>) {}
-//!
+//! # async fn handler(_: axum::extract::State<AppState>) {}
 //! #[derive(Clone, Copy)]
-//! #[routes(state_type = AppState)]
+//! #[routes(state_type = AppState)]  // note state_type argument
 //! enum Route {
 //!     #[get("/", handler = handler)]
 //!     Home,
@@ -164,10 +173,10 @@
 //!
 //! #[tokio::main]
 //! async fn main() {
-//!     // Add all routes from enum to an axum::Router
-//!     let app = Route::to_router().with_state(AppState{});
-//!     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-//!     axum::serve(listener, app).await.unwrap();
+//!     let app = Route::to_router()
+//!         .with_state(AppState);  // add state as usual
+//!     # let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+//!     # axum::serve(listener, app).await.unwrap();
 //! }
 //! ```
 //!
@@ -182,25 +191,19 @@
 //!
 //! ```no_run
 //! use axum::{extract::Request, middleware::{from_fn, Next}, response::IntoResponse};
-//! use axum_myroutes::routes;
-//!
-//! #[derive(Default)]
-//! struct RouteProps {
-//!     require_auth: bool
-//! }
-//!
-//! async fn handler() {}
-//!
-//! #[derive(Clone)]
-//! #[routes(props_type = RouteProps)]
-//! enum Route {
-//!     #[get("/private", handler = handler, props = RouteProps{ require_auth: true })]
-//!     Private,
-//! }
-//!
+//! # use axum_myroutes::routes;
+//! # #[derive(Default)]
+//! # struct RouteProps { require_auth: bool }
+//! # async fn handler() {}
+//! # #[derive(Clone)]
+//! # #[routes(props_type = RouteProps)]
+//! # enum Route {
+//! #     #[get("/", handler = handler)]
+//! #     Home,
+//! # }
 //! async fn middleware(route: MyRoute, request: Request, next: Next) -> impl IntoResponse {
 //!     if route.props().require_auth {
-//!         // ...
+//!         // check auth
 //!     }
 //!     next.run(request).await
 //! }
@@ -208,8 +211,8 @@
 //! #[tokio::main]
 //! async fn main() {
 //!     let app = Route::to_router_with(|route| route.layer(from_fn(middleware)));
-//!     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-//!     axum::serve(listener, app).await.unwrap();
+//!     # let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+//!     # axum::serve(listener, app).await.unwrap();
 //! }
 //! ```
 
