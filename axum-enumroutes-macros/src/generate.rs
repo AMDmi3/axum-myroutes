@@ -4,8 +4,9 @@
 use proc_macro::TokenStream;
 use quote::quote;
 
+use crate::r#enum::Enum;
+use crate::method::Method;
 use crate::path::PathSegment;
-use crate::types::{Enum, Method};
 
 pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
     let vis = &r#enum.vis;
