@@ -10,7 +10,7 @@ use crate::path::PathSegment;
 pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
     let vis = &r#enum.vis;
     let enum_ident = &r#enum.ident;
-    let extractor_ident = quote::format_ident!("Self{}", &r#enum.ident);
+    let extractor_ident = quote::format_ident!("My{}", &r#enum.ident);
     let state_type = &r#enum.state_type;
     let props_type = &r#enum.props_type;
 
@@ -81,20 +81,20 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
             .iter()
             .map(|segment| match segment {
                 PathSegment::Static(s) => {
-                    quote! {::axum_enumroutes::__private::PathSegment::Static(#s) }
+                    quote! {::axum_myroutes::__private::PathSegment::Static(#s) }
                 }
                 PathSegment::Param(s) => {
-                    quote! {::axum_enumroutes::__private::PathSegment::Param(#s) }
+                    quote! {::axum_myroutes::__private::PathSegment::Param(#s) }
                 }
                 PathSegment::CatchAllParam(s) => {
-                    quote! {::axum_enumroutes::__private::PathSegment::CatchAllParam(#s) }
+                    quote! {::axum_myroutes::__private::PathSegment::CatchAllParam(#s) }
                 }
             })
             .collect();
 
         path_segment_matches.push(quote! {
             #(#variant_cfg_attributes)*
-            #enum_ident::#variant_ident => { static VALUE: &[::axum_enumroutes::__private::PathSegment] = &[#(#path_segments),*]; VALUE },
+            #enum_ident::#variant_ident => { static VALUE: &[::axum_myroutes::__private::PathSegment] = &[#(#path_segments),*]; VALUE },
         });
 
         // We need specific layer ordering: for the route extractor to work in the
@@ -105,16 +105,16 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
             let router = router
                 .merge(
                     f(
-                        ::axum_enumroutes::__private::axum::Router::<#state_type>::new()
+                        ::axum_myroutes::__private::axum::Router::<#state_type>::new()
                         .route(
                             #enum_ident::#variant_ident.path(),
-                            ::axum_enumroutes::__private::axum::routing::#method_router_ident(
+                            ::axum_myroutes::__private::axum::routing::#method_router_ident(
                                 #variant_handler
                             )
                         )
                     )
                     .layer(
-                        ::axum_enumroutes::__private::axum::Extension(
+                        ::axum_myroutes::__private::axum::Extension(
                             #enum_ident::#variant_ident
                         )
                     )
@@ -147,53 +147,53 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
                 }
             }
 
-            pub fn url_for(&self) -> ::axum_enumroutes::PathBuilder {
-                ::axum_enumroutes::PathBuilder::new(
+            pub fn url_for(&self) -> ::axum_myroutes::PathBuilder {
+                ::axum_myroutes::PathBuilder::new(
                     match self {
                         #(#path_segment_matches)*
                     }
                 )
             }
 
-            pub fn to_router_with<F>(f: F) -> ::axum_enumroutes::__private::axum::Router::<#state_type>
+            pub fn to_router_with<F>(f: F) -> ::axum_myroutes::__private::axum::Router::<#state_type>
                 where F: Fn(
-                    ::axum_enumroutes::__private::axum::Router::<#state_type>
-                ) -> ::axum_enumroutes::__private::axum::Router::<#state_type>
+                    ::axum_myroutes::__private::axum::Router::<#state_type>
+                ) -> ::axum_myroutes::__private::axum::Router::<#state_type>
             {
-                let router = axum_enumroutes::__private::axum::Router::new();
+                let router = axum_myroutes::__private::axum::Router::new();
                 #(#routes)*
                 router
             }
 
-            pub fn to_router() -> ::axum_enumroutes::__private::axum::Router::<#state_type> {
+            pub fn to_router() -> ::axum_myroutes::__private::axum::Router::<#state_type> {
                 Self::to_router_with(std::convert::identity)
             }
         }
 
         impl<S: ::std::marker::Send + ::std::marker::Sync>
-            ::axum_enumroutes::__private::axum::extract::FromRequestParts<S> for #enum_ident
+            ::axum_myroutes::__private::axum::extract::FromRequestParts<S> for #enum_ident
         {
-            type Rejection = ::axum_enumroutes::__private::axum::http::StatusCode;
+            type Rejection = ::axum_myroutes::__private::axum::http::StatusCode;
 
             async fn from_request_parts(
-                parts: &mut ::axum_enumroutes::__private::axum::http::request::Parts,
+                parts: &mut ::axum_myroutes::__private::axum::http::request::Parts,
                 _: &S,
             ) -> ::core::result::Result<Self, Self::Rejection> {
                 parts
                     .extensions
                     .get::<#enum_ident>()
                     .cloned()
-                    .ok_or(::axum_enumroutes::__private::axum::http::StatusCode::INTERNAL_SERVER_ERROR)
+                    .ok_or(::axum_myroutes::__private::axum::http::StatusCode::INTERNAL_SERVER_ERROR)
             }
         }
 
         impl<S: ::std::marker::Send + ::std::marker::Sync>
-            ::axum_enumroutes::__private::axum::extract::OptionalFromRequestParts<S> for #enum_ident
+            ::axum_myroutes::__private::axum::extract::OptionalFromRequestParts<S> for #enum_ident
         {
             type Rejection = ::std::convert::Infallible;
 
             async fn from_request_parts(
-                parts: &mut ::axum_enumroutes::__private::axum::http::request::Parts,
+                parts: &mut ::axum_myroutes::__private::axum::http::request::Parts,
                 _: &S,
             ) -> ::core::result::Result<::core::option::Option<Self>, Self::Rejection> {
                 ::core::result::Result::Ok(parts
@@ -205,7 +205,7 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
 
         #vis struct #extractor_ident {
             route: #enum_ident,
-            url_for_self: ::axum_enumroutes::PathBuilder,
+            url_for_self: ::axum_myroutes::PathBuilder,
         }
 
         impl #extractor_ident {
@@ -221,46 +221,46 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
                 self.route.props()
             }
 
-            pub fn url_for(&self) -> ::axum_enumroutes::PathBuilder {
+            pub fn url_for(&self) -> ::axum_myroutes::PathBuilder {
                 self.url_for_self.clone()
             }
         }
 
         impl<S: ::std::marker::Send + ::std::marker::Sync>
-            ::axum_enumroutes::__private::axum::extract::FromRequestParts<S> for #extractor_ident
+            ::axum_myroutes::__private::axum::extract::FromRequestParts<S> for #extractor_ident
         {
-            type Rejection = ::axum_enumroutes::__private::axum::http::StatusCode;
+            type Rejection = ::axum_myroutes::__private::axum::http::StatusCode;
 
             async fn from_request_parts(
-                parts: &mut ::axum_enumroutes::__private::axum::http::request::Parts,
+                parts: &mut ::axum_myroutes::__private::axum::http::request::Parts,
                 state: &S,
             ) -> ::core::result::Result<Self, Self::Rejection> {
-                <#extractor_ident as ::axum_enumroutes::__private::axum::extract::OptionalFromRequestParts<S>>::from_request_parts(parts, state)
+                <#extractor_ident as ::axum_myroutes::__private::axum::extract::OptionalFromRequestParts<S>>::from_request_parts(parts, state)
                     .await?
-                    .ok_or(::axum_enumroutes::__private::axum::http::StatusCode::INTERNAL_SERVER_ERROR)
+                    .ok_or(::axum_myroutes::__private::axum::http::StatusCode::INTERNAL_SERVER_ERROR)
             }
         }
 
         impl<S: ::std::marker::Send + ::std::marker::Sync>
-            ::axum_enumroutes::__private::axum::extract::OptionalFromRequestParts<S> for #extractor_ident
+            ::axum_myroutes::__private::axum::extract::OptionalFromRequestParts<S> for #extractor_ident
         {
-            type Rejection = ::axum_enumroutes::__private::axum::http::StatusCode;
+            type Rejection = ::axum_myroutes::__private::axum::http::StatusCode;
 
             async fn from_request_parts(
-                parts: &mut ::axum_enumroutes::__private::axum::http::request::Parts,
+                parts: &mut ::axum_myroutes::__private::axum::http::request::Parts,
                 state: &S,
             ) -> ::core::result::Result<::core::option::Option<Self>, Self::Rejection> {
                 let ::core::option::Option::Some(route) = parts.extensions.get::<#enum_ident>().cloned() else {
                     return ::core::result::Result::Ok(::core::option::Option::None);
                 };
 
-                use ::axum_enumroutes::__private::axum::extract::{Path, Query};
-                let Path(path_params) = <Path::<Vec<(String, String)>> as ::axum_enumroutes::__private::axum::extract::FromRequestParts<S>>::from_request_parts(parts, state)
+                use ::axum_myroutes::__private::axum::extract::{Path, Query};
+                let Path(path_params) = <Path::<Vec<(String, String)>> as ::axum_myroutes::__private::axum::extract::FromRequestParts<S>>::from_request_parts(parts, state)
                     .await
-                    .map_err(|_| ::axum_enumroutes::__private::axum::http::StatusCode::BAD_REQUEST)?;
-                let Query(query_params) = <Query::<Vec<(String, String)>> as ::axum_enumroutes::__private::axum::extract::FromRequestParts<S>>::from_request_parts(parts, state)
+                    .map_err(|_| ::axum_myroutes::__private::axum::http::StatusCode::BAD_REQUEST)?;
+                let Query(query_params) = <Query::<Vec<(String, String)>> as ::axum_myroutes::__private::axum::extract::FromRequestParts<S>>::from_request_parts(parts, state)
                     .await
-                    .map_err(|_| ::axum_enumroutes::__private::axum::http::StatusCode::BAD_REQUEST)?;
+                    .map_err(|_| ::axum_myroutes::__private::axum::http::StatusCode::BAD_REQUEST)?;
 
                 let mut url_for_self = route.url_for();
                 for (k, v) in path_params {

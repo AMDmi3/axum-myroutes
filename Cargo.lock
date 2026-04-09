@@ -91,12 +91,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "axum-enumroutes"
+name = "axum-myroutes"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "axum",
- "axum-enumroutes-macros",
+ "axum-myroutes-macros",
  "axum-test",
  "indexmap",
  "thiserror",
@@ -106,7 +106,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "axum-enumroutes-macros"
+name = "axum-myroutes-macros"
 version = "0.1.0"
 dependencies = [
  "itertools",

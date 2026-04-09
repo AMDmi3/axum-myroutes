@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use axum::extract::State;
-use axum_enumroutes::routes;
+use axum_myroutes::routes;
 
 #[derive(Clone)]
 struct AppState {}

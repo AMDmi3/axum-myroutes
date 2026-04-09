@@ -1,5 +1,5 @@
 [workspace]
-members = ["axum-enumroutes", "axum-enumroutes-macros"]
+members = ["axum-myroutes", "axum-myroutes-macros"]
 resolver = "3"
 
 [workspace.package]
@@ -10,11 +10,11 @@ description = "Declare axum routes as enum, use to construct urls"
 rust-version = "1.88"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
-homepage = "https://github.com/AMDmi3/axum-enumroutes"
-repository = "https://github.com/AMDmi3/axum-enumroutes"
-documentation = "https://docs.rs/axum-enumroutes"
+homepage = "https://github.com/AMDmi3/axum-myroutes"
+repository = "https://github.com/AMDmi3/axum-myroutes"
+documentation = "https://docs.rs/axum-myroutes"
 keywords = ["axum", "route", "routes", "extractor", "url_for"]
 
 [workspace.dependencies]
-axum-enumroutes-macros = { path = "axum-enumroutes-macros", version = "0.1.0" }
+axum-myroutes-macros = { path = "axum-myroutes-macros", version = "0.1.0" }
 axum = { version = "0.8", default-features = false }

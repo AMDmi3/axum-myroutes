@@ -4,7 +4,7 @@
 use axum::extract::Request;
 use axum::middleware::{self, Next};
 use axum::response::IntoResponse;
-use axum_enumroutes::routes;
+use axum_myroutes::routes;
 
 async fn _handler() {}
 
@@ -15,7 +15,7 @@ enum Route {
     Foo,
 }
 
-async fn middleware(route: SelfRoute, request: Request, next: Next) -> impl IntoResponse {
+async fn middleware(route: MyRoute, request: Request, next: Next) -> impl IntoResponse {
     assert_eq!(route.name(), "Foo");
     next.run(request).await
 }

@@ -1,4 +1,4 @@
-# axum-enumroutes
+# axum-myroutes
 
 This crate provides convenient and reliable way to work with routes in `axum`. Define routes along with their methods, paths and handlers in an enum, add these to `axum::Router` with a single call, then refer to any route (and construct a link to it) via corresponding enum variant, which provides compile time checked internal links for your application. Also, axum extractor is provided for handlers to be aware of their routes, and capable of constructing links to themselves.
 
@@ -12,7 +12,7 @@ This crate provides convenient and reliable way to work with routes in `axum`. D
 ## Example
 
 ```rust
-use axum_enumroutes::routes;
+use axum_myroutes::routes;
 
 // Specify routes
 #[derive(Clone, Copy)]
@@ -29,8 +29,8 @@ assert_eq!(Route::ItemById.name(), "ItemById");
 assert!(Route::ItemById.url_for().build().is_err());
 assert_eq!(Route::ItemById.url_for().param("id", 1).build().unwrap(), "/items/1".to_string());
 
-// `Self``Route` is an extractor generated for `Route` enum
-async fn item_by_id(route: SelfRoute) {
+// `My``Route` is an extractor generated for `Route` enum
+async fn item_by_id(route: MyRoute) {
     assert_eq!(route.path(), "/items/{id}");
     assert_eq!(route.name(), "ItemById");
     // Current parameters are already filled...
@@ -54,13 +54,13 @@ This crate uses `#![forbid(unsafe_code)]` to ensure everything is implemented in
 
 ## Supported Rust versions
 
-`axum-enumroutes` supports current stable Rust version and 2 most recent minor releases before it.
+`axum-myroutes` supports current stable Rust version and 2 most recent minor releases before it.
 Increasing MSRV is not considered a semver breaking change as long as it follows this policy.
 The current MSRV is 1.88.
 
 ## Documentation
 
-See https://docs.rs/axum-enumroutes/latest/axum-enumroutes/ for complete documentation.
+See https://docs.rs/axum-myroutes/latest/axum-myroutes/ for complete documentation.
 
 ## Other implementations of the same concept
 

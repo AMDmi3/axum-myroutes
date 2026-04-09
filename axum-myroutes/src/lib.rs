@@ -12,7 +12,7 @@
 //! # Example
 //!
 //! ```no_run
-//! use axum_enumroutes::routes;
+//! use axum_myroutes::routes;
 //!
 //! // Specify routes
 //! #[derive(Clone, Copy)]
@@ -31,8 +31,8 @@
 //! assert_eq!(Route::ItemById.url_for().param("id", 1).build().unwrap(), "/items/1".to_string());
 //! # }
 //!
-//! // `Self``Route` is an extractor generated for `Route` enum
-//! async fn item_by_id(route: SelfRoute) {
+//! // `My``Route` is an extractor generated for `Route` enum
+//! async fn item_by_id(route: MyRoute) {
 //!     assert_eq!(route.path(), "/items/{id}");
 //!     assert_eq!(route.name(), "ItemById");
 //!     // Current parameters are already filled...
@@ -56,7 +56,7 @@
 //! state type must be passed to `#[routes]` argument:
 //!
 //! ```no_run
-//! use axum_enumroutes::routes;
+//! use axum_myroutes::routes;
 //!
 //! #[derive(Clone)]
 //! struct AppState;
@@ -87,7 +87,7 @@
 //! `url_for()`.
 //!
 //! ```
-//! # use axum_enumroutes::routes;
+//! # use axum_myroutes::routes;
 //! # async fn _handler(){}
 //! #[derive(Clone, Copy)]
 //! #[routes]
@@ -125,7 +125,7 @@
 //! retrieved with route method:
 //!
 //! ```
-//! # use axum_enumroutes::routes;
+//! # use axum_myroutes::routes;
 //! # async fn _handler(){}
 //! #[derive(Default)]
 //! struct RouteProps {
@@ -151,9 +151,9 @@
 //! ## Extractors
 //!
 //! ```
-//! # use axum_enumroutes::routes;
-//! // SelfRoute extractor provided for Route enum
-//! async fn item_by_id(route: SelfRoute) {
+//! # use axum_myroutes::routes;
+//! // MyRoute extractor provided for Route enum
+//! async fn item_by_id(route: MyRoute) {
 //!     // Same methods as route variant
 //!     assert_eq!(route.path(), "/");
 //!     assert_eq!(route.name(), "Home");
@@ -185,7 +185,7 @@ use std::collections::HashMap;
 /// # Example
 ///
 /// ```
-/// use axum_enumroutes::routes;
+/// use axum_myroutes::routes;
 ///
 /// async fn handler() {}
 ///
@@ -250,12 +250,12 @@ use std::collections::HashMap;
 ///   with access to route extractor, you must add it through this method, and not on
 ///   the already constructed router.
 ///
-/// Additionally, extractor type is generated, named with `Self` prefix (e.g.
-/// `SelfRoute` for `enum Route`), with the same methods except for `to_router*`.
+/// Additionally, extractor type is generated, named with `My` prefix (e.g.
+/// `MyRoute` for `enum Route`), with the same methods except for `to_router*`.
 /// Unlike the route enum variant, `url_for()` for this type returns path constructor
 /// with parameters already filled from the current request, so you can construct URL
 /// to self from it right away, or override some parameters if necessary.
-pub use axum_enumroutes_macros::routes;
+pub use axum_myroutes_macros::routes;
 
 #[doc(hidden)]
 pub mod __private {

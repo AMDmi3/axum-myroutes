@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use axum::extract::Path;
-use axum_enumroutes::routes;
+use axum_myroutes::routes;
 
 #[derive(Default)]
 struct Props {
@@ -19,7 +19,7 @@ enum Route {
     Bar,
 }
 
-async fn foo(route: SelfRoute, Path(id): Path<u64>) -> String {
+async fn foo(route: MyRoute, Path(id): Path<u64>) -> String {
     format!(
         "handler=foo, route={}, someprop={}, to_self={}, to_next={}, to_other={}",
         route.name(),
@@ -30,7 +30,7 @@ async fn foo(route: SelfRoute, Path(id): Path<u64>) -> String {
     )
 }
 
-async fn bar(route: SelfRoute, Path(id): Path<u64>) -> String {
+async fn bar(route: MyRoute, Path(id): Path<u64>) -> String {
     format!(
         "handler=bar, route={}, someprop={}, to_self={}, to_next={}, to_other={}",
         route.name(),

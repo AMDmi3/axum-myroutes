@@ -1,14 +1,9 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-#![cfg(feature = "nightly")]
-#![feature(const_default)]
-#![feature(const_trait_impl)]
-#![feature(derive_const)]
+use axum_myroutes::routes;
 
-use axum_enumroutes::routes;
-
-#[derive_const(Default)]
+#[derive(Default)]
 struct Props {
     someprop: u64,
 }
@@ -18,9 +13,9 @@ async fn _handler() -> &'static str {
 }
 
 #[derive(Clone, Copy)]
-#[routes(props_type = Props, static_props = true, default_props = true)]
+#[routes(props_type = Props, static_props = false, default_props = true)]
 enum Routes {
-    #[get("/foo/{id}", handler = _handler)] // const Props::default is used
+    #[get("/foo/{id}", handler = _handler)] // Props::default is used
     Foo,
     #[get("/bar/{id}", handler = _handler, props = Props { someprop: 1 })]
     Bar,

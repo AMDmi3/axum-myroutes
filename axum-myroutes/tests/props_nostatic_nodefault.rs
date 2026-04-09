@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use axum_enumroutes::routes;
+use axum_myroutes::routes;
 
 struct Props {
     someprop: u64,
@@ -12,7 +12,7 @@ async fn _handler() -> &'static str {
 }
 
 #[derive(Clone, Copy)]
-#[routes(props_type = Props, static_props = true, default_props = false)]
+#[routes(props_type = Props, static_props = false, default_props = false)]
 enum Routes {
     #[get("/foo/{id}", handler = _handler, props = Props { someprop: 0 })]
     Foo,

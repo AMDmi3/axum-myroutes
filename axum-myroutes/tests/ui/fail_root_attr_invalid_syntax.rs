@@ -1,16 +1,16 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use axum_enumroutes::routes;
+use axum_myroutes::routes;
 
 async fn _handler() -> &'static str {
     ""
 }
 
 #[derive(Clone)]
-#[routes]
+#[routes(,)]
 enum Route {
-    #[get("/")]
+    #[get("/", handler = _handler)]
     Index,
 }
 

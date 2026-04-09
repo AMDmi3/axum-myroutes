@@ -1,5 +1,5 @@
 [package]
-name = "axum-enumroutes-macros"
+name = "axum-myroutes-macros"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
