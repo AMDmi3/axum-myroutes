@@ -64,7 +64,10 @@ See https://docs.rs/axum-myroutes/latest/axum-myroutes/ for complete documentati
 
 ## Other implementations of the same concept
 
-- [axum-routes](https://crates.io/crates/axum-routes)
+- [axum-routes](https://crates.io/crates/axum-routes). Very similar
+  enum based approach, supports route nesting, but uses macros for router
+  creation and path construction excessively, does not support extractors
+  and custom route properties.
 
 ## License
 
