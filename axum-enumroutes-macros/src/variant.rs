@@ -8,6 +8,7 @@ use crate::variant_attribute::{Route, VariantAttribute};
 pub struct Variant {
     pub ident: syn::Ident,
     pub route: Route,
+    pub cfg_attributes: Vec<syn::Attribute>,
     pub other_attributes: Vec<syn::Attribute>,
 }
 
@@ -31,6 +32,7 @@ impl Variant {
         // parse
         let mut route: Option<Route> = None;
         let mut other_attributes: Vec<syn::Attribute> = vec![];
+        let mut cfg_attributes: Vec<syn::Attribute> = vec![];
         for attr in variant.attrs {
             match VariantAttribute::parse(&attr)? {
                 VariantAttribute::Route(new_route) => {
@@ -42,6 +44,7 @@ impl Variant {
                     }
                 }
                 VariantAttribute::Other => other_attributes.push(attr),
+                VariantAttribute::Cfg => cfg_attributes.push(attr),
             }
         }
 
@@ -55,6 +58,7 @@ impl Variant {
         Ok(Variant {
             ident: variant.ident,
             route,
+            cfg_attributes,
             other_attributes,
         })
     }

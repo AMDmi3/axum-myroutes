@@ -38,31 +38,37 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
     for variant in &r#enum.variants {
         let variant_ident = &variant.ident;
         let variant_ident_name = variant_ident.to_string();
+        let variant_cfg_attributes = &variant.cfg_attributes;
         let variant_other_attributes = &variant.other_attributes;
         let variant_path = variant.route.path.to_string();
         let variant_handler = &variant.route.handler;
         let method_router_ident = quote::format_ident!("{}", variant.route.method.as_str());
 
         enum_variants.push(quote! {
+            #(#variant_cfg_attributes)*
             #(#variant_other_attributes)*
             #variant_ident,
         });
 
         path_matches.push(quote! {
+            #(#variant_cfg_attributes)*
             #enum_ident::#variant_ident => #variant_path,
         });
 
         name_matches.push(quote! {
+            #(#variant_cfg_attributes)*
             #enum_ident::#variant_ident => #variant_ident_name,
         });
 
         if let Some(prop) = &variant.route.props {
             if r#enum.static_props {
                 props_matches.push(quote! {
+                    #(#variant_cfg_attributes)*
                     #enum_ident::#variant_ident => { static VALUE: #props_type = #prop; &VALUE },
                 });
             } else {
                 props_matches.push(quote! {
+                    #(#variant_cfg_attributes)*
                     #enum_ident::#variant_ident => { #prop },
                 });
             }
@@ -87,6 +93,7 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
             .collect();
 
         path_segment_matches.push(quote! {
+            #(#variant_cfg_attributes)*
             #enum_ident::#variant_ident => { static VALUE: &[::axum_enumroutes::__private::PathSegment] = &[#(#path_segments),*]; VALUE },
         });
 
@@ -94,22 +101,24 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
         // middleware, layer adding route extension must come AFTER all the layer
         // which may use it.
         routes.push(quote! {
-            .merge(
-                f(
-                    ::axum_enumroutes::__private::axum::Router::<#state_type>::new()
-                    .route(
-                        #enum_ident::#variant_ident.path(),
-                        ::axum_enumroutes::__private::axum::routing::#method_router_ident(
-                            #variant_handler
+            #(#variant_cfg_attributes)*
+            let router = router
+                .merge(
+                    f(
+                        ::axum_enumroutes::__private::axum::Router::<#state_type>::new()
+                        .route(
+                            #enum_ident::#variant_ident.path(),
+                            ::axum_enumroutes::__private::axum::routing::#method_router_ident(
+                                #variant_handler
+                            )
                         )
                     )
-                )
-                .layer(
-                    ::axum_enumroutes::__private::axum::Extension(
-                        #enum_ident::#variant_ident
+                    .layer(
+                        ::axum_enumroutes::__private::axum::Extension(
+                            #enum_ident::#variant_ident
+                        )
                     )
-                )
-            )
+                );
         });
     }
 
@@ -151,8 +160,9 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
                     ::axum_enumroutes::__private::axum::Router::<#state_type>
                 ) -> ::axum_enumroutes::__private::axum::Router::<#state_type>
             {
-                axum_enumroutes::__private::axum::Router::new()
+                let router = axum_enumroutes::__private::axum::Router::new();
                 #(#routes)*
+                router
             }
 
             pub fn to_router() -> ::axum_enumroutes::__private::axum::Router::<#state_type> {

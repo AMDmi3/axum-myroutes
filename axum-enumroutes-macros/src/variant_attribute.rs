@@ -17,6 +17,7 @@ pub struct Route {
 #[allow(clippy::large_enum_variant, reason = "should not matter much")]
 pub enum VariantAttribute {
     Route(Route),
+    Cfg,
     Other,
 }
 
@@ -28,7 +29,7 @@ impl VariantAttribute {
                 .segments
                 .first()
                 .map(|segment| segment.ident.to_string());
-            if let Some(attr_name) = attr_name
+            if let Some(attr_name) = &attr_name
                 && let Ok(method) = attr_name.parse()
             {
                 let mut path: Option<Path> = None;
@@ -82,6 +83,8 @@ impl VariantAttribute {
                     handler,
                     props,
                 }));
+            } else if attr_name.is_some_and(|name| name == "cfg") {
+                return Ok(VariantAttribute::Cfg);
             }
         }
 
