@@ -18,7 +18,7 @@ use axum_myroutes::routes;
 #[derive(Clone, Copy)]
 #[routes]
 enum Route {
-    #[get("/items.{id}", handler = item_by_id)]
+    #[get("/items/{id}", handler = item_by_id)]
     ItemById,
 }
 
