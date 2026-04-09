@@ -50,35 +50,6 @@
 //! }
 //! ```
 //!
-//! ## Router with state
-//!
-//! If router with state is used (e.g. `.with_state()` is called on a router), the
-//! state type must be passed to `#[routes]` argument:
-//!
-//! ```no_run
-//! use axum_myroutes::routes;
-//!
-//! #[derive(Clone)]
-//! struct AppState;
-//!
-//! async fn handler(_: axum::extract::State<AppState>) {}
-//!
-//! #[derive(Clone, Copy)]
-//! #[routes(state_type = AppState)]
-//! enum Route {
-//!     #[get("/", handler = handler)]
-//!     Home,
-//! }
-//!
-//! #[tokio::main]
-//! async fn main() {
-//!     // Add all routes from enum to an axum::Router
-//!     let app = Route::to_router().with_state(AppState{});
-//!     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-//!     axum::serve(listener, app).await.unwrap();
-//! }
-//! ```
-//!
 //! ## Route methods and path construction
 //!
 //! `#[routes]` enum has methods to query information related to route and to construct
@@ -168,6 +139,77 @@
 //! enum Route {
 //!     #[get("/{id}", handler = item_by_id)]
 //!     ItemById,
+//! }
+//! ```
+//!
+//! ## Router with state
+//!
+//! If router with state is used (e.g. `.with_state()` is called on a router), the
+//! state type must be passed to `#[routes]` argument:
+//!
+//! ```no_run
+//! use axum_myroutes::routes;
+//!
+//! #[derive(Clone)]
+//! struct AppState;
+//!
+//! async fn handler(_: axum::extract::State<AppState>) {}
+//!
+//! #[derive(Clone, Copy)]
+//! #[routes(state_type = AppState)]
+//! enum Route {
+//!     #[get("/", handler = handler)]
+//!     Home,
+//! }
+//!
+//! #[tokio::main]
+//! async fn main() {
+//!     // Add all routes from enum to an axum::Router
+//!     let app = Route::to_router().with_state(AppState{});
+//!     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+//!     axum::serve(listener, app).await.unwrap();
+//! }
+//! ```
+//!
+//! ## Middleware with access to current route
+//!
+//! Current route can be accessed from a middleware, and this provides a powerful
+//! mechanism to control routes behavior in a centralized way with route props.
+//! However, for a middleware to see a current route, it should be added to a router
+//! _before_ the route information is added, which means you can't add such middleware
+//! to constructed `Router`. Instead, use `to_router_with()` to intervene with the
+//! router construction and insert middleware a the right spot.
+//!
+//! ```no_run
+//! use axum::{extract::Request, middleware::{from_fn, Next}, response::IntoResponse};
+//! use axum_myroutes::routes;
+//!
+//! #[derive(Default)]
+//! struct RouteProps {
+//!     require_auth: bool
+//! }
+//!
+//! async fn handler() {}
+//!
+//! #[derive(Clone)]
+//! #[routes(props_type = RouteProps)]
+//! enum Route {
+//!     #[get("/private", handler = handler, props = RouteProps{ require_auth: true })]
+//!     Private,
+//! }
+//!
+//! async fn middleware(route: MyRoute, request: Request, next: Next) -> impl IntoResponse {
+//!     if route.props().require_auth {
+//!         // ...
+//!     }
+//!     next.run(request).await
+//! }
+//!
+//! #[tokio::main]
+//! async fn main() {
+//!     let app = Route::to_router_with(|route| route.layer(from_fn(middleware)));
+//!     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+//!     axum::serve(listener, app).await.unwrap();
 //! }
 //! ```
 
