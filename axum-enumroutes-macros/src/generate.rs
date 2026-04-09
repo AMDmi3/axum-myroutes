@@ -5,7 +5,6 @@ use proc_macro::TokenStream;
 use quote::quote;
 
 use crate::r#enum::Enum;
-use crate::method::Method;
 use crate::path::PathSegment;
 
 pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
@@ -42,10 +41,7 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
         let variant_other_attributes = &variant.other_attributes;
         let variant_path = variant.route.path.to_string();
         let variant_handler = &variant.route.handler;
-        let method_router_ident = match &variant.route.method {
-            Method::Get => quote::format_ident!("get"),
-            Method::Post => quote::format_ident!("post"),
-        };
+        let method_router_ident = quote::format_ident!("{}", variant.route.method.as_str());
 
         enum_variants.push(quote! {
             #(#variant_other_attributes)*
