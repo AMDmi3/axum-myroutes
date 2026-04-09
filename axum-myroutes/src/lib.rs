@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 //! This crate provides convenient and reliable way to work with routes
-//! in `axum`. Define routes along with their methods, paths and handlers
-//! in an enum, add these to `axum::Router` with a single call, then refer
+//! in [`axum`]. Define routes along with their methods, paths and handlers
+//! in an enum, add construct [`axum::Router`] with a single call, then refer
 //! to any route (and construct a link to it) via corresponding enum variant,
 //! which provides compile time checked internal links for your application.
 //! Also, axum extractor is provided for handlers to be aware of their routes,
@@ -100,7 +100,7 @@
 //! A type to store additional route properties can be provided, set per-route, and
 //! retrieved with route method.
 //!
-//! There are options to toggle `Default` requirement on props type, and to allow
+//! There are options to toggle [`Default`] requirement on props type, and to allow
 //! static construction of props, enabled through [`routes`] arguments.
 //!
 //! ```
@@ -245,15 +245,17 @@ use std::collections::HashMap;
 /// # Requirements
 ///
 /// - Enum must be non-generic and cloneable (since the enum is trivial,
-///   you may want to derive `Copy` as well).
+///   you may want to derive [`Copy`] as well).
 /// - Variants must not contain any data fields or a discriminant,
 ///   each variant must have a single route attribute.
+/// - Route paths must follow modern [`axum`] placeholder syntax,
+///   e.g. `/{foo}/{bar}` and not `/:foo/:bar`.
 ///
 /// # Macro attribute arguments
 ///
-/// - `state_type` (default is unit type (`()`)) - type for route state. If you
+/// - `state_type` (default is unit type `()`) - type for route state. If you
 ///   call `.with_state()` on the router, it should be the same type.
-/// - `props_type` (default is unit type (`()`)) - type for route properties.
+/// - `props_type` (default is unit type `()`) - type for route properties.
 ///   When defined, you can set properties for each route with `props` parameter
 ///   on its route attribute.
 /// - `static_props` (default false) - whether route properties are statically
@@ -269,7 +271,9 @@ use std::collections::HashMap;
 ///
 /// # Route attributes
 ///
-/// Allowed attributes corresponding to HTTP methods: `get`, `post`.
+/// Allowed attributes corresponding to HTTP methods (or, rather,
+/// [`axum::routing::method_routing::MethodRouter`] constructors): `any`, `connect`,
+/// `delete`, `get`, `head`, `options`, `patch`, `post`, `put`, `trace`.
 ///
 /// First argument is a string with route path, other arguments are key-value pairs:
 ///
@@ -286,19 +290,20 @@ use std::collections::HashMap;
 /// - `props() -> <props_type>` (`static_props` is false) or
 ///   `props() -> &'static <props_type>` (`static_props` is trie) - returns properties
 ///   defined for a route.
-/// - `url_for() -> PathBuilder` - return a path constructor for this route.
-/// - `to_router() -> axum::Router` - create axum router with specified routes.
+/// - `url_for() -> PathBuilder` - returns a path constructor for this route.
+/// - `to_router() -> axum::Router` - creates [`axum::Router`] from the routes defined
+///   in the enum.
 /// - `to_router_with(f: Fn(axum::Router) -> axum::Router) -> axum::Router` - create
-///   axum router with custom modifications (such as adding middleware). This is required
+///   [`axum::Router`] with custization (such as adding middleware). This is required
 ///   to ensure layer ordering, as layers which use route extractor must be registered
 ///   before a layer which adds corresponding extension. In other words, to add middleware
 ///   with access to route extractor, you must add it through this method, and not on
-///   the already constructed router.
+///   an already constructed router.
 ///
 /// Additionally, extractor type is generated, named with `My` prefix (e.g.
 /// `MyRoute` for `enum Route`), with the same methods except for `to_router*`.
 /// Unlike the route enum variant, `url_for()` for this type returns path constructor
-/// with parameters already filled from the current request, so you can construct URL
+/// with parameters already filled from the current request, so you can construct path
 /// to self from it right away, or override some parameters if necessary.
 pub use axum_myroutes_macros::routes;
 
