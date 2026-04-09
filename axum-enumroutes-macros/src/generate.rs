@@ -168,7 +168,7 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
             async fn from_request_parts(
                 parts: &mut ::axum_enumroutes::__private::axum::http::request::Parts,
                 _: &S,
-            ) -> ::std::result::Result<Self, Self::Rejection> {
+            ) -> ::core::result::Result<Self, Self::Rejection> {
                 parts
                     .extensions
                     .get::<#enum_ident>()
@@ -185,8 +185,8 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
             async fn from_request_parts(
                 parts: &mut ::axum_enumroutes::__private::axum::http::request::Parts,
                 _: &S,
-            ) -> ::std::result::Result<::std::option::Option<Self>, Self::Rejection> {
-                Ok(parts
+            ) -> ::core::result::Result<::core::option::Option<Self>, Self::Rejection> {
+                ::core::result::Result::Ok(parts
                    .extensions
                    .get::<#enum_ident>()
                    .cloned())
@@ -224,7 +224,7 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
             async fn from_request_parts(
                 parts: &mut ::axum_enumroutes::__private::axum::http::request::Parts,
                 state: &S,
-            ) -> ::std::result::Result<Self, Self::Rejection> {
+            ) -> ::core::result::Result<Self, Self::Rejection> {
                 <#extractor_ident as ::axum_enumroutes::__private::axum::extract::OptionalFromRequestParts<S>>::from_request_parts(parts, state)
                     .await?
                     .ok_or(::axum_enumroutes::__private::axum::http::StatusCode::INTERNAL_SERVER_ERROR)
@@ -239,9 +239,9 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
             async fn from_request_parts(
                 parts: &mut ::axum_enumroutes::__private::axum::http::request::Parts,
                 state: &S,
-            ) -> ::std::result::Result<::std::option::Option<Self>, Self::Rejection> {
-                let Some(route) = parts.extensions.get::<#enum_ident>().cloned() else {
-                    return Ok(None);
+            ) -> ::core::result::Result<::core::option::Option<Self>, Self::Rejection> {
+                let ::core::option::Option::Some(route) = parts.extensions.get::<#enum_ident>().cloned() else {
+                    return ::core::result::Result::Ok(::core::option::Option::None);
                 };
 
                 use ::axum_enumroutes::__private::axum::extract::{Path, Query};
@@ -260,7 +260,7 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
                     url_for_self = url_for_self.query_param(k, v);
                 }
 
-                Ok(Some(Self {
+                ::core::result::Result::Ok(::core::option::Option::Some(Self {
                     route,
                     url_for_self
                 }))
