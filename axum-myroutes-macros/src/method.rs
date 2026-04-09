@@ -3,7 +3,7 @@
 
 use std::str::FromStr;
 
-// Each variant corresponds to axum funtion from method_routing
+// Each variant corresponds to axum function from method_routing
 // See https://docs.rs/axum/latest/axum/routing/method_routing/index.html
 pub enum Method {
     Any,
