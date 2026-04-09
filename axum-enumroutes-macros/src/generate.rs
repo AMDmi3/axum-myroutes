@@ -10,7 +10,7 @@ use crate::path::PathSegment;
 
 pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
     let vis = &r#enum.vis;
-    let ident = &r#enum.ident;
+    let enum_ident = &r#enum.ident;
     let extractor_ident = quote::format_ident!("Self{}", &r#enum.ident);
     let state_type = &r#enum.state_type;
     let props_type = &r#enum.props_type;
@@ -53,21 +53,21 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
         });
 
         path_matches.push(quote! {
-            #ident::#variant_ident => #variant_path,
+            #enum_ident::#variant_ident => #variant_path,
         });
 
         name_matches.push(quote! {
-            #ident::#variant_ident => #variant_ident_name,
+            #enum_ident::#variant_ident => #variant_ident_name,
         });
 
         if let Some(prop) = &variant.route.props {
             if r#enum.static_props {
                 props_matches.push(quote! {
-                    #ident::#variant_ident => { static VALUE: #props_type = #prop; &VALUE },
+                    #enum_ident::#variant_ident => { static VALUE: #props_type = #prop; &VALUE },
                 });
             } else {
                 props_matches.push(quote! {
-                    #ident::#variant_ident => { #prop },
+                    #enum_ident::#variant_ident => { #prop },
                 });
             }
         }
@@ -91,7 +91,7 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
             .collect();
 
         path_segment_matches.push(quote! {
-            #ident::#variant_ident => { static VALUE: &[::axum_enumroutes::__private::PathSegment] = &[#(#path_segments),*]; VALUE },
+            #enum_ident::#variant_ident => { static VALUE: &[::axum_enumroutes::__private::PathSegment] = &[#(#path_segments),*]; VALUE },
         });
 
         // We need specific layer ordering: for the route extractor to work in the
@@ -102,7 +102,7 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
                 f(
                     ::axum_enumroutes::__private::axum::Router::<#state_type>::new()
                     .route(
-                        #ident::#variant_ident.path(),
+                        #enum_ident::#variant_ident.path(),
                         ::axum_enumroutes::__private::axum::routing::#method_router_ident(
                             #variant_handler
                         )
@@ -110,7 +110,7 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
                 )
                 .layer(
                     ::axum_enumroutes::__private::axum::Extension(
-                        #ident::#variant_ident
+                        #enum_ident::#variant_ident
                     )
                 )
             )
@@ -118,11 +118,11 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
     }
 
     Ok(quote! {
-        #vis enum #ident {
+        #vis enum #enum_ident {
             #(#enum_variants)*
         }
 
-        impl #ident {
+        impl #enum_ident {
             pub fn path(&self) -> &'static str {
                 match self {
                     #(#path_matches)*
@@ -165,7 +165,7 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
         }
 
         impl<S: ::std::marker::Send + ::std::marker::Sync>
-            ::axum_enumroutes::__private::axum::extract::FromRequestParts<S> for #ident
+            ::axum_enumroutes::__private::axum::extract::FromRequestParts<S> for #enum_ident
         {
             type Rejection = ::axum_enumroutes::__private::axum::http::StatusCode;
 
@@ -175,14 +175,14 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
             ) -> ::std::result::Result<Self, Self::Rejection> {
                 parts
                     .extensions
-                    .get::<#ident>()
+                    .get::<#enum_ident>()
                     .cloned()
                     .ok_or(::axum_enumroutes::__private::axum::http::StatusCode::INTERNAL_SERVER_ERROR)
             }
         }
 
         #vis struct #extractor_ident {
-            route: #ident,
+            route: #enum_ident,
             url_for_self: ::axum_enumroutes::PathBuilder,
         }
 
@@ -218,7 +218,7 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
 
                 let route = parts
                     .extensions
-                    .get::<#ident>()
+                    .get::<#enum_ident>()
                     .cloned()
                     .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
                 let Path(path_params) = Path::<Vec<(String, String)>>::from_request_parts(parts, state)
