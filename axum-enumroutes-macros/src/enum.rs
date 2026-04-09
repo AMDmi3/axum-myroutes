@@ -5,7 +5,7 @@ use itertools::Itertools;
 use proc_macro::TokenStream;
 use syn::{ItemEnum, spanned::Spanned};
 
-use crate::routes_attribute::RootAttributeArgs;
+use crate::routes_attribute::RoutesAttributeArgs;
 use crate::variant::Variant;
 
 pub struct Enum {
@@ -20,7 +20,7 @@ pub struct Enum {
 
 impl Enum {
     pub fn parse(attr: TokenStream, item: TokenStream) -> syn::Result<Enum> {
-        let root_attribute_args = RootAttributeArgs::parse(attr)?;
+        let routes_attribute_args = RoutesAttributeArgs::parse(attr)?;
 
         let r#enum = syn::parse::<ItemEnum>(item)?;
 
@@ -39,10 +39,10 @@ impl Enum {
             vis: r#enum.vis,
             ident: r#enum.ident,
             variants,
-            state_type: root_attribute_args.state_type,
-            props_type: root_attribute_args.props_type,
-            static_props: root_attribute_args.static_props,
-            default_props: root_attribute_args.default_props,
+            state_type: routes_attribute_args.state_type,
+            props_type: routes_attribute_args.props_type,
+            static_props: routes_attribute_args.static_props,
+            default_props: routes_attribute_args.default_props,
         })
     }
 }

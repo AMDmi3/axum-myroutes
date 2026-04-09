@@ -15,13 +15,13 @@ pub struct Route {
 }
 
 #[allow(clippy::large_enum_variant, reason = "should not matter much")]
-pub enum AttributeKind {
+pub enum VariantAttribute {
     Route(Route),
     Other,
 }
 
-impl AttributeKind {
-    pub fn parse(attr: &syn::Attribute) -> syn::Result<AttributeKind> {
+impl VariantAttribute {
+    pub fn parse(attr: &syn::Attribute) -> syn::Result<VariantAttribute> {
         if let syn::Meta::List(list) = &attr.meta {
             let attr_name = list
                 .path
@@ -76,7 +76,7 @@ impl AttributeKind {
                     return Err(syn::Error::new(attr.span(), "missing `handler` argument"));
                 };
 
-                return Ok(AttributeKind::Route(Route {
+                return Ok(VariantAttribute::Route(Route {
                     method,
                     path,
                     handler,
@@ -85,6 +85,6 @@ impl AttributeKind {
             }
         }
 
-        Ok(AttributeKind::Other)
+        Ok(VariantAttribute::Other)
     }
 }

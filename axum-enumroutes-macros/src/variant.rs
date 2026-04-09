@@ -3,7 +3,7 @@
 
 use syn::spanned::Spanned;
 
-use crate::variant_attribute::{AttributeKind, Route};
+use crate::variant_attribute::{Route, VariantAttribute};
 
 pub struct Variant {
     pub ident: syn::Ident,
@@ -32,8 +32,8 @@ impl Variant {
         let mut route: Option<Route> = None;
         let mut other_attributes: Vec<syn::Attribute> = vec![];
         for attr in variant.attrs {
-            match AttributeKind::parse(&attr)? {
-                AttributeKind::Route(new_route) => {
+            match VariantAttribute::parse(&attr)? {
+                VariantAttribute::Route(new_route) => {
                     if route.replace(new_route).is_some() {
                         return Err(syn::Error::new(
                             attr.span(),
@@ -41,7 +41,7 @@ impl Variant {
                         ));
                     }
                 }
-                AttributeKind::Other => other_attributes.push(attr),
+                VariantAttribute::Other => other_attributes.push(attr),
             }
         }
 

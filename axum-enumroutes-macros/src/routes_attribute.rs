@@ -4,16 +4,16 @@
 use proc_macro::TokenStream;
 use syn::parse::ParseStream;
 
-pub struct RootAttributeArgs {
+pub struct RoutesAttributeArgs {
     pub state_type: syn::Type,
     pub props_type: syn::Type,
     pub static_props: bool,
     pub default_props: bool,
 }
 
-impl RootAttributeArgs {
-    pub fn parse(attr: TokenStream) -> syn::Result<RootAttributeArgs> {
-        let mut res = RootAttributeArgs {
+impl RoutesAttributeArgs {
+    pub fn parse(attr: TokenStream) -> syn::Result<RoutesAttributeArgs> {
+        let mut res = RoutesAttributeArgs {
             state_type: syn::parse_quote!(()),
             props_type: syn::parse_quote!(()),
             static_props: false,
