@@ -304,10 +304,19 @@ use indexmap::IndexMap;
 ///   an already constructed router.
 ///
 /// Additionally, extractor type is generated, named with `My` prefix (e.g.
-/// `MyRoute` for `enum Route`), with the same methods except for `to_router*`.
-/// Unlike the route enum variant, `url_for()` for this type returns path constructor
-/// with parameters already filled from the current request, so you can construct path
-/// to self from it right away, or override some parameters if necessary.
+/// `MyRoute` for `enum Route`), with methods similar to that of an enum:
+///
+/// - `path() -> &'static str` - returns route path, as specified in the attribute.
+/// - `name() -> &'static str` - returns route enum variant name.
+/// - `props() -> <props_type>` (`static_props` is false) or
+///   `props() -> &'static <props_type>` (`static_props` is trie) - returns properties
+///   defined for a route.
+/// - `url_for_self() -> &PathBuilder` - returns a reference to path constructor for
+///   this route with all parameters filled from the request, capable of building a
+///   path to self.
+/// - `url_for() -> PathBuilder` - returns a clone of path constructor for this route
+///   with all parameters filled from the request, capable of building a path to self
+///   and modifications of it (by adding, updating, or clearing any parameters).
 pub use axum_myroutes_macros::routes;
 
 #[doc(hidden)]

@@ -224,6 +224,10 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
             pub fn url_for(&self) -> ::axum_myroutes::PathBuilder {
                 self.url_for_self.clone()
             }
+
+            pub fn url_for_self(&self) -> &::axum_myroutes::PathBuilder {
+                &self.url_for_self
+            }
         }
 
         impl<S: ::std::marker::Send + ::std::marker::Sync>
