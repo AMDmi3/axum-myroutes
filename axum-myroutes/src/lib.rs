@@ -405,6 +405,14 @@ impl PathBuilder {
         self
     }
 
+    /// Fills parameters and fragment from another instance of `PathBuilder`.
+    pub fn filled_from(mut self, other: &Self) -> Self {
+        self.path_params = other.path_params.clone();
+        self.query_params = other.query_params.clone();
+        self.fragment = other.fragment.clone();
+        self
+    }
+
     /// Builds a path.
     ///
     /// Fills a path pattern with provided parameters, adding query parameters
@@ -537,5 +545,17 @@ mod tests {
         assert_eq!(path.build().unwrap(), "1");
         let path = path.cleared_param("foo");
         assert!(path.build().is_err());
+    }
+
+    #[test]
+    fn test_fill() {
+        static SEGMENTS: &[PathSegment] = &[PathSegment::Param("foo")];
+        let path1 = PathBuilder::new(SEGMENTS)
+            .param("foo", 1)
+            .query_param("bar", 2)
+            .fragment("3");
+        let path2 = PathBuilder::new(SEGMENTS).filled_from(&path1);
+        assert_eq!(path1.build().unwrap(), "1?bar=2#3");
+        assert_eq!(path2.build().unwrap(), "1?bar=2#3");
     }
 }
