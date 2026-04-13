@@ -218,8 +218,11 @@
 
 #![forbid(unsafe_code)]
 
-use indexmap::IndexMap;
+use std::borrow::Borrow;
 use std::collections::HashMap;
+use std::hash::Hash;
+
+use indexmap::IndexMap;
 
 /// Main attribute macro for routes enum.
 ///
@@ -357,6 +360,16 @@ impl PathBuilder {
         self
     }
 
+    /// Clears a path parameter.
+    pub fn cleared_param<Q>(mut self, k: &Q) -> Self
+    where
+        String: Borrow<Q>,
+        Q: Hash + Eq + ?Sized,
+    {
+        self.path_params.remove(k.borrow());
+        self
+    }
+
     /// Adds or updates query parameter.
     pub fn query_param<K, V>(mut self, k: K, v: V) -> Self
     where
@@ -367,12 +380,28 @@ impl PathBuilder {
         self
     }
 
+    /// Clears a path parameter.
+    pub fn cleared_query_param<Q>(mut self, k: &Q) -> Self
+    where
+        String: Borrow<Q>,
+        Q: Hash + Eq + ?Sized,
+    {
+        self.query_params.shift_remove(k.borrow());
+        self
+    }
+
     /// Adds or updates URL fragment.
     pub fn fragment<S>(mut self, fragment: S) -> Self
     where
         S: std::fmt::Display,
     {
         self.fragment = Some(format!("{}", fragment));
+        self
+    }
+
+    /// Clears URL fragment.
+    pub fn cleared_fragment(mut self) -> Self {
+        self.fragment = None;
         self
     }
 
@@ -490,5 +519,23 @@ mod tests {
     fn test_construction_errors() {
         static SEGMENTS: &[PathSegment] = &[PathSegment::Param("a")];
         assert!(PathBuilder::new(SEGMENTS).build().is_err());
+    }
+
+    #[test]
+    fn test_clear() {
+        static SEGMENTS: &[PathSegment] = &[PathSegment::Param("foo")];
+        let path = PathBuilder::new(SEGMENTS)
+            .param("foo", 1)
+            .query_param("bar", 2)
+            .fragment("3");
+        assert_eq!(path.build().unwrap(), "1?bar=2#3");
+        let path = path
+            .cleared_param("nonexistent")
+            .cleared_query_param("nonexistent");
+        assert_eq!(path.build().unwrap(), "1?bar=2#3");
+        let path = path.cleared_fragment().cleared_query_param("bar");
+        assert_eq!(path.build().unwrap(), "1");
+        let path = path.cleared_param("foo");
+        assert!(path.build().is_err());
     }
 }
