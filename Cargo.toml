@@ -3,7 +3,7 @@ members = ["axum-myroutes", "axum-myroutes-macros"]
 resolver = "3"
 
 [workspace.package]
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["Dmitry Marakasov <amdmi3@amdmi3.ru>"]
 description = "Declare axum routes as enum, use to construct urls"
@@ -16,5 +16,5 @@ documentation = "https://docs.rs/axum-myroutes"
 keywords = ["axum", "route", "routes", "extractor", "url_for"]
 
 [workspace.dependencies]
-axum-myroutes-macros = { path = "axum-myroutes-macros", version = "0.1.0" }
+axum-myroutes-macros = { path = "axum-myroutes-macros", version = "0.1.1" }
 axum = { version = "0.8", default-features = false }

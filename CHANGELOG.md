@@ -1,6 +1,6 @@
 # Changelog
 
-## unreleased
+## 0.1.1
 
 - **added**: `clear_{param,query_param,fragment}` methods for `PathBuilder`.
 - **added**: `filled_from` method for `PathBuilder`.
