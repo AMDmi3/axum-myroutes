@@ -18,7 +18,7 @@ nightly = ["axum-myroutes-macros/nightly"]
 generic_param = []
 
 [dependencies]
-axum = "0.8.8"
+axum = { version = "0.8.8", default-features = false, features = ["query"] }
 axum-myroutes-macros.workspace = true
 indexmap = "2.14.0"
 thiserror = "2.0.18"
@@ -26,6 +26,7 @@ url-escape = "0.1.1"
 
 [dev-dependencies]
 anyhow = "1.0.102"
+axum = "0.8.8"
 axum-test = "20.0.0"
 tokio = { version = "1.51.1", features = ["macros", "rt-multi-thread"] }
 trybuild = "1.0.116"
