@@ -439,6 +439,21 @@ impl PathBuilder {
         Ok(self)
     }
 
+    /// Clears all path parameters.
+    pub fn cleared_path_params(mut self) -> Self {
+        self.path_params.clear();
+        self
+    }
+
+    /// Retains only path parameters.
+    ///
+    /// Clears query parameters and the fragment.
+    pub fn retained_path_params(mut self) -> Self {
+        self.query_params.clear();
+        self.fragment = None;
+        self
+    }
+
     /// Adds or updates query parameter.
     ///
     /// Order of added query parameters is preserved.
@@ -459,6 +474,21 @@ impl PathBuilder {
         K: Borrow<str> + ?Sized,
     {
         self.query_params.shift_remove(key.borrow());
+        self
+    }
+
+    /// Clears all query parameters.
+    pub fn cleared_query_params(mut self) -> Self {
+        self.query_params.clear();
+        self
+    }
+
+    /// Retains only query parameters.
+    ///
+    /// Clears path parameters and the fragment.
+    pub fn retained_query_params<K>(mut self) -> Self {
+        self.path_params.clear();
+        self.fragment = None;
         self
     }
 
@@ -492,6 +522,23 @@ impl PathBuilder {
         self
     }
 
+    /// Clears all parameters.
+    ///
+    /// Clears both path and query parameters.
+    pub fn cleared_params(mut self) -> Self {
+        self.path_params.clear();
+        self.query_params.clear();
+        self
+    }
+
+    /// Retains only parameters.
+    ///
+    /// Clears fragment.
+    pub fn retained_params(mut self) -> Self {
+        self.fragment = None;
+        self
+    }
+
     /// Adds or updates URL fragment.
     pub fn fragment<S>(mut self, fragment: S) -> Self
     where
@@ -504,6 +551,15 @@ impl PathBuilder {
     /// Clears URL fragment.
     pub fn cleared_fragment(mut self) -> Self {
         self.fragment = None;
+        self
+    }
+
+    /// Retains only URL fragment.
+    ///
+    /// Clears both path and query parameters.
+    pub fn retained_fragment(mut self) -> Self {
+        self.path_params.clear();
+        self.query_params.clear();
         self
     }
 

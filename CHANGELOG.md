@@ -13,6 +13,7 @@
   This restriction may be relaxed in the future.
 - **breaking**: `PathConstructionError` was renamed to `PathBuilderError` and is now
   `non_exhaustive`.
+- **added**: `cleared_`/`retained_` methods for path/query/all params and the fragment.
 
 ## 0.1.2
 
