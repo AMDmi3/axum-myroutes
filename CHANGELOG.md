@@ -1,6 +1,6 @@
 # Changelog
 
-## unreleased
+## 0.2.0
 
 - **added**: `path_param()`, `cleared_path_param()` methods for `PathBuilder`.
   These provide stricter API and return error when nonexistent path parameter
