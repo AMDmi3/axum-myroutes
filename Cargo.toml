@@ -17,4 +17,3 @@ keywords = ["axum", "route", "routes", "extractor", "url_for"]
 
 [workspace.dependencies]
 axum-myroutes-macros = { path = "axum-myroutes-macros", version = "0.2.1" }
-axum = { version = "0.8", default-features = false }
