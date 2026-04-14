@@ -1,6 +1,6 @@
 # Changelog
 
-## unreleased
+## 0.2.1
 
 - **added**: `param()`, `cleared_param()` methods are now under `generic_param` crate
   feature, enabled by default. It's now possible to disable this feature and ensure
