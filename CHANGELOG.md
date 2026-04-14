@@ -1,5 +1,19 @@
 # Changelog
 
+## unreleased
+
+- **added**: `path_param()`, `cleared_path_param()` methods for `PathBuilder`.
+  These provide stricter API and return error when nonexistent path parameter
+  is provided.
+- **breaking**: `PathBuilder::param()` now falls back to setting query parameter
+  if there's no path parameter with the provided name.
+- **breaking**: `PathBuilder::clear_param()` now clears both query and path parameters.
+- **breaking**: `PathBuilder::filled_from()` is now fallible as it checks paths
+  compatibility: parameter sets used in both paths must now match (but order is irrelevant).
+  This restriction may be relaxed in the future.
+- **breaking**: `PathConstructionError` was renamed to `PathBuilderError` and is now
+  `non_exhaustive`.
+
 ## 0.1.2
 
 - **added**: `base()` method for route extractor.

@@ -220,7 +220,6 @@
 
 use std::borrow::Borrow;
 use std::collections::HashMap;
-use std::hash::Hash;
 
 use indexmap::IndexMap;
 
@@ -324,6 +323,7 @@ pub use axum_myroutes_macros::routes;
 pub mod __private {
     pub use axum;
 
+    #[derive(Debug)]
     pub enum PathSegment {
         Static(&'static str),
         Param(&'static str),
@@ -332,21 +332,69 @@ pub mod __private {
 }
 
 #[derive(thiserror::Error, Debug)]
-pub enum PathConstructionError {
+#[non_exhaustive]
+pub enum PathBuilderError {
     #[error("missing path parameter {0}")]
     MissingPathParam(&'static str),
+    #[error("invalid path parameter {0}")]
+    InvalidPathParam(String, PathBuilder),
+    #[error("incompatible paths")]
+    IncompatiblePaths(PathBuilder),
 }
 
 /// Route path builder.
 ///
 /// This allows to fill a route path pattern with given parameter
 /// values and construct a complete path.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PathBuilder {
     path_segments: &'static [__private::PathSegment],
     path_params: HashMap<String, String>,
     query_params: IndexMap<String, String>,
     fragment: Option<String>,
+}
+
+fn has_path_param(path_segments: &[__private::PathSegment], key: &str) -> bool {
+    for segment in path_segments {
+        match segment {
+            __private::PathSegment::Param(param_name) if *param_name == key => {
+                return true;
+            }
+            __private::PathSegment::CatchAllParam(param_name) if *param_name == key => {
+                return true;
+            }
+            _ => {}
+        }
+    }
+    false
+}
+
+fn path_param_names(segments: &[__private::PathSegment]) -> Vec<&'static str> {
+    segments
+        .iter()
+        .filter_map(|segment| match segment {
+            __private::PathSegment::Param(param_name) => Some(*param_name),
+            __private::PathSegment::CatchAllParam(param_name) => Some(*param_name),
+            _ => None,
+        })
+        .collect()
+}
+
+fn are_paths_compatible(
+    segments_a: &[__private::PathSegment],
+    segments_b: &[__private::PathSegment],
+) -> bool {
+    let mut names_a = path_param_names(segments_a);
+    let mut names_b = path_param_names(segments_b);
+
+    if names_a.len() == names_b.len() {
+        names_a.sort();
+        names_b.sort();
+
+        names_a == names_b
+    } else {
+        false
+    }
 }
 
 impl PathBuilder {
@@ -361,42 +409,86 @@ impl PathBuilder {
     }
 
     /// Adds or updates path parameter.
-    pub fn param<K, V>(mut self, k: K, v: V) -> Self
+    ///
+    /// Fails if there's no such parameter in the path template.
+    pub fn path_param<K, V>(mut self, key: K, value: V) -> Result<Self, PathBuilderError>
     where
         K: Into<String>,
         V: std::fmt::Display,
     {
-        self.path_params.insert(k.into(), format!("{}", v));
-        self
+        let key: String = key.into();
+        if !has_path_param(self.path_segments, &key) {
+            return Err(PathBuilderError::InvalidPathParam(key, self));
+        }
+        self.path_params.insert(key, format!("{}", value));
+        Ok(self)
     }
 
     /// Clears a path parameter.
-    pub fn cleared_param<Q>(mut self, k: &Q) -> Self
+    ///
+    /// Fails if there's no such parameter in the path template.
+    pub fn cleared_path_param<K>(mut self, key: &K) -> Result<Self, PathBuilderError>
     where
-        String: Borrow<Q>,
-        Q: Hash + Eq + ?Sized,
+        K: Borrow<str> + ?Sized,
     {
-        self.path_params.remove(k.borrow());
-        self
+        let key = key.borrow();
+        if !has_path_param(self.path_segments, key) {
+            return Err(PathBuilderError::InvalidPathParam(key.to_string(), self));
+        }
+        self.path_params.remove(key);
+        Ok(self)
     }
 
     /// Adds or updates query parameter.
-    pub fn query_param<K, V>(mut self, k: K, v: V) -> Self
+    ///
+    /// Order of added query parameters is preserved.
+    pub fn query_param<K, V>(mut self, key: K, value: V) -> Self
     where
         K: Into<String>,
         V: std::fmt::Display,
     {
-        self.query_params.insert(k.into(), format!("{}", v));
+        self.query_params.insert(key.into(), format!("{}", value));
         self
     }
 
-    /// Clears a path parameter.
-    pub fn cleared_query_param<Q>(mut self, k: &Q) -> Self
+    /// Clears a query parameter.
+    ///
+    /// Order of remaining query parameters is preserved.
+    pub fn cleared_query_param<K>(mut self, key: &K) -> Self
     where
-        String: Borrow<Q>,
-        Q: Hash + Eq + ?Sized,
+        K: Borrow<str> + ?Sized,
     {
-        self.query_params.shift_remove(k.borrow());
+        self.query_params.shift_remove(key.borrow());
+        self
+    }
+
+    /// Adds or updates path or query parameter.
+    ///
+    /// If there's such parameter in the path template, adds or updates it,
+    /// otherwise adds or updates corresponding query parameter.
+    ///
+    /// Order of added query parameters is preserved.
+    pub fn param<K, V>(mut self, key: K, value: V) -> Self
+    where
+        K: Into<String>,
+        V: std::fmt::Display,
+    {
+        let key: String = key.into();
+        if has_path_param(self.path_segments, &key) {
+            self.path_params.insert(key, format!("{}", value));
+        } else {
+            self.query_params.insert(key, format!("{}", value));
+        }
+        self
+    }
+
+    /// Clears both path and query parameter.
+    pub fn cleared_param<K>(mut self, key: &K) -> Self
+    where
+        K: Borrow<str> + ?Sized,
+    {
+        self.path_params.remove(key.borrow());
+        self.query_params.shift_remove(key.borrow());
         self
     }
 
@@ -416,11 +508,14 @@ impl PathBuilder {
     }
 
     /// Fills parameters and fragment from another instance of `PathBuilder`.
-    pub fn filled_from(mut self, other: &Self) -> Self {
+    pub fn filled_from(mut self, other: &Self) -> Result<Self, PathBuilderError> {
+        if !are_paths_compatible(self.path_segments, other.path_segments) {
+            return Err(PathBuilderError::IncompatiblePaths(self));
+        }
         self.path_params = other.path_params.clone();
         self.query_params = other.query_params.clone();
         self.fragment = other.fragment.clone();
-        self
+        Ok(self)
     }
 
     /// Builds a path.
@@ -435,7 +530,7 @@ impl PathBuilder {
     ///
     /// Fails if corresponding path pattern is invalid, or if required path
     /// parameter was not provided.
-    pub fn build(&self) -> Result<String, PathConstructionError> {
+    pub fn build(&self) -> Result<String, PathBuilderError> {
         let mut res = String::new();
         for segment in self.path_segments {
             use __private::PathSegment;
@@ -447,14 +542,14 @@ impl PathBuilder {
                     if let Some(value) = self.path_params.get(*key) {
                         res += &url_escape::encode_component(value);
                     } else {
-                        return Err(PathConstructionError::MissingPathParam(key));
+                        return Err(PathBuilderError::MissingPathParam(key));
                     }
                 }
                 PathSegment::CatchAllParam(key) => {
                     if let Some(value) = self.path_params.get(*key) {
                         res += &url_escape::encode_path(value);
                     } else {
-                        return Err(PathConstructionError::MissingPathParam(key));
+                        return Err(PathBuilderError::MissingPathParam(key));
                     }
                 }
             }
@@ -487,26 +582,24 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_basic_build() {
+    fn test_param_kinds() {
         static SEGMENTS: &[PathSegment] = &[
-            PathSegment::Static("/static/{}/a"),
-            PathSegment::Param("foo"),
+            PathSegment::Static("/static/"),
+            PathSegment::Param("a"),
             PathSegment::Static("/"),
-            PathSegment::Param("bar"),
-            PathSegment::Static("b/c"),
-            PathSegment::CatchAllParam("baz"),
-            PathSegment::Static("c"),
+            PathSegment::CatchAllParam("b"),
         ];
         let path = PathBuilder::new(SEGMENTS)
-            .param("foo", "1")
-            .param("bar", 2)
-            .param("baz", String::from("3"))
-            .query_param("aaa", 1)
-            .query_param("bbb", 2)
+            .path_param("a", "1")
+            .unwrap()
+            .path_param("b", "2")
+            .unwrap()
+            .query_param("c", "3")
+            .query_param("d", "4")
             .fragment("frag")
             .build()
             .unwrap();
-        assert_eq!(path, "/static/{}/a1/2b/c3c?aaa=1&bbb=2#frag");
+        assert_eq!(path, "/static/1/2?c=3&d=4#frag");
     }
 
     #[test]
@@ -514,10 +607,13 @@ mod tests {
         static SEGMENTS: &[PathSegment] = &[PathSegment::Param("a")];
         assert_eq!(
             PathBuilder::new(SEGMENTS)
-                .param("a", "/%20#")
+                .path_param("a", "%/%#")
+                .unwrap()
+                .query_param("b", "%/%#")
+                .fragment("%/%#")
                 .build()
                 .unwrap(),
-            "%2F%2520%23"
+            "%25%2F%25%23?b=%25%2F%25%23#%25%2F%25%23"
         );
     }
 
@@ -526,46 +622,141 @@ mod tests {
         static SEGMENTS: &[PathSegment] = &[PathSegment::CatchAllParam("a")];
         assert_eq!(
             PathBuilder::new(SEGMENTS)
-                .param("a", "/%20#")
+                .path_param("a", "%/%#")
+                .unwrap()
                 .build()
                 .unwrap(),
-            "/%20%23"
+            // XXX: Should really be "%25/%25%23"
+            "%/%%23"
         );
     }
 
     #[test]
-    fn test_construction_errors() {
+    fn test_missing_path_param() {
         static SEGMENTS: &[PathSegment] = &[PathSegment::Param("a")];
         assert!(PathBuilder::new(SEGMENTS).build().is_err());
+        assert!(
+            PathBuilder::new(SEGMENTS)
+                .path_param("a", "1")
+                .unwrap()
+                .build()
+                .is_ok()
+        );
+    }
+
+    #[test]
+    fn test_missing_path_catch_all_param() {
+        static SEGMENTS: &[PathSegment] = &[PathSegment::CatchAllParam("a")];
+        assert!(PathBuilder::new(SEGMENTS).build().is_err());
+        assert!(
+            PathBuilder::new(SEGMENTS)
+                .path_param("a", "1")
+                .unwrap()
+                .build()
+                .is_ok()
+        );
+    }
+
+    #[test]
+    fn test_kv_type_conversion() {
+        static SEGMENTS: &[PathSegment] = &[PathSegment::CatchAllParam("a")];
+        assert_eq!(
+            PathBuilder::new(SEGMENTS)
+                .path_param("a", "1")
+                .unwrap()
+                .build()
+                .unwrap(),
+            "1"
+        );
+        assert_eq!(
+            PathBuilder::new(SEGMENTS)
+                .path_param("a".to_string(), "1")
+                .unwrap()
+                .build()
+                .unwrap(),
+            "1"
+        );
+        assert_eq!(
+            PathBuilder::new(SEGMENTS)
+                .path_param("a", 1)
+                .unwrap()
+                .build()
+                .unwrap(),
+            "1"
+        );
+        assert_eq!(
+            PathBuilder::new(SEGMENTS)
+                .path_param("a", "1".to_string())
+                .unwrap()
+                .build()
+                .unwrap(),
+            "1"
+        );
+    }
+
+    #[test]
+    fn test_bad_path_param() {
+        static SEGMENTS: &[PathSegment] = &[PathSegment::Param("a")];
+        assert!(PathBuilder::new(SEGMENTS).path_param("a", "1").is_ok());
+        assert!(PathBuilder::new(SEGMENTS).path_param("b", "1").is_err());
+        assert!(PathBuilder::new(SEGMENTS).cleared_path_param("a").is_ok());
+        assert!(PathBuilder::new(SEGMENTS).cleared_path_param("b").is_err());
     }
 
     #[test]
     fn test_clear() {
-        static SEGMENTS: &[PathSegment] = &[PathSegment::Param("foo")];
+        static SEGMENTS: &[PathSegment] = &[PathSegment::Param("a")];
         let path = PathBuilder::new(SEGMENTS)
-            .param("foo", 1)
-            .query_param("bar", 2)
+            .path_param("a", 1)
+            .unwrap()
+            .query_param("b", 2)
             .fragment("3");
-        assert_eq!(path.build().unwrap(), "1?bar=2#3");
-        let path = path
-            .cleared_param("nonexistent")
-            .cleared_query_param("nonexistent");
-        assert_eq!(path.build().unwrap(), "1?bar=2#3");
-        let path = path.cleared_fragment().cleared_query_param("bar");
-        assert_eq!(path.build().unwrap(), "1");
-        let path = path.cleared_param("foo");
-        assert!(path.build().is_err());
+        assert_eq!(path.clone().build().unwrap(), "1?b=2#3");
+        assert!(
+            path.clone()
+                .cleared_path_param("a")
+                .unwrap()
+                .build()
+                .is_err()
+        );
+        assert_eq!(
+            path.clone().cleared_query_param("b").build().unwrap(),
+            "1#3"
+        );
+        assert_eq!(path.clone().cleared_fragment().build().unwrap(), "1?b=2");
     }
 
     #[test]
     fn test_fill() {
-        static SEGMENTS: &[PathSegment] = &[PathSegment::Param("foo")];
+        static SEGMENTS: &[PathSegment] = &[PathSegment::Param("a")];
         let path1 = PathBuilder::new(SEGMENTS)
-            .param("foo", 1)
-            .query_param("bar", 2)
+            .path_param("a", 1)
+            .unwrap()
+            .query_param("b", 2)
             .fragment("3");
-        let path2 = PathBuilder::new(SEGMENTS).filled_from(&path1);
-        assert_eq!(path1.build().unwrap(), "1?bar=2#3");
-        assert_eq!(path2.build().unwrap(), "1?bar=2#3");
+        let path2 = PathBuilder::new(SEGMENTS).filled_from(&path1).unwrap();
+        assert_eq!(path1.build().unwrap(), "1?b=2#3");
+        assert_eq!(path2.build().unwrap(), "1?b=2#3");
+    }
+
+    #[test]
+    fn test_fill_incompatible() {
+        static SEGMENTS1: &[PathSegment] = &[PathSegment::Param("a")];
+        static SEGMENTS2: &[PathSegment] = &[PathSegment::Param("b")];
+        assert!(
+            PathBuilder::new(SEGMENTS1)
+                .filled_from(&PathBuilder::new(SEGMENTS2))
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn test_mixed_params() {
+        static SEGMENTS: &[PathSegment] = &[PathSegment::Param("a")];
+        let path = PathBuilder::new(SEGMENTS).param("a", 1).param("b", 2);
+        assert_eq!(path.clone().build().unwrap(), "1?b=2");
+        assert_eq!(path.clone().cleared_param("c").build().unwrap(), "1?b=2");
+        assert_eq!(path.clone().cleared_param("b").build().unwrap(), "1");
+        assert!(path.clone().cleared_param("a").build().is_err());
     }
 }
