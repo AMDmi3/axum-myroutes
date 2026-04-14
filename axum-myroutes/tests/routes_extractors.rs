@@ -26,8 +26,18 @@ async fn foo(route: MyRoute, Path(id): Path<u64>) -> String {
         route.name(),
         route.props().someprop,
         route.url_for().build().unwrap(),
-        route.url_for().param("id", id + 1).build().unwrap(),
-        Route::Bar.url_for().param("id", id).build().unwrap(),
+        route
+            .url_for()
+            .path_param("id", id + 1)
+            .unwrap()
+            .build()
+            .unwrap(),
+        Route::Bar
+            .url_for()
+            .path_param("id", id)
+            .unwrap()
+            .build()
+            .unwrap(),
     )
 }
 
@@ -38,8 +48,18 @@ async fn bar(route: MyRoute, Path(id): Path<u64>) -> String {
         route.name(),
         route.props().someprop,
         route.url_for().build().unwrap(),
-        route.url_for().param("id", id + 1).build().unwrap(),
-        Route::Foo.url_for().param("id", id).build().unwrap(),
+        route
+            .url_for()
+            .path_param("id", id + 1)
+            .unwrap()
+            .build()
+            .unwrap(),
+        Route::Foo
+            .url_for()
+            .path_param("id", id)
+            .unwrap()
+            .build()
+            .unwrap(),
     )
 }
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## unreleased
+
+- **added**: `param()`, `cleared_param()` methods are now under `generic_param` crate
+  feature, enabled by default. It's now possible to disable this feature and ensure
+  that only strict `path_param()`/`cleared_path_param()` API is used.
+
 ## 0.2.0
 
 - **added**: `path_param()`, `cleared_path_param()` methods for `PathBuilder`.

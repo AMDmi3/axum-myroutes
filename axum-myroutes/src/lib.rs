@@ -29,7 +29,7 @@
 //!     // Construct links to routes
 //!     format!(
 //!         "<a href={}>To first item</a>",
-//!         Route::ItemById.url_for().param("id", 1).build().unwrap()
+//!         Route::ItemById.url_for().path_param("id", 1).unwrap().build().unwrap()
 //!     )
 //! }
 //!
@@ -41,7 +41,7 @@
 //!         // Construct links to current route, parameters are already filled...
 //!         route.url_for().build().unwrap(),
 //!         // ...but can be modified
-//!         route.url_for().param("id", id + 1).build().unwrap(),
+//!         route.url_for().path_param("id", id + 1).unwrap().build().unwrap(),
 //!     )
 //! }
 //!
@@ -76,8 +76,12 @@
 //! // Get route name (name of enum variant)
 //! assert_eq!(Route::ItemById.name(), "ItemById");
 //!
-//! // Construct url
-//! assert_eq!(Route::ItemById.url_for().param("id", 123).build().unwrap(), "/123");
+//! // Construct url (path_param fails on unknown parameter)
+//! assert_eq!(Route::ItemById.url_for().path_param("id", 123).unwrap().build().unwrap(), "/123");
+//!
+//! // But there's also shorted relaxed variant under `generic_param` feature
+//! // which can sets both path and query params
+//! //assert_eq!(Route::ItemById.url_for().param("id", 123).build().unwrap(), "/123");
 //!
 //! // Error on missing parameter
 //! assert!(Route::ItemById.url_for().build().is_err());
@@ -86,7 +90,7 @@
 //! assert_eq!(
 //!     Route::ItemById
 //!         .url_for()
-//!         .param("id", 123)
+//!         .path_param("id", 123).unwrap()
 //!         .query_param("foo", "bar")
 //!         .fragment("frag")
 //!         .build()
@@ -501,6 +505,7 @@ impl PathBuilder {
     /// otherwise adds or updates corresponding query parameter.
     ///
     /// Order of added query parameters is preserved.
+    #[cfg(feature = "generic_param")]
     pub fn param<K, V>(mut self, key: K, value: V) -> Self
     where
         K: Into<String>,
@@ -516,6 +521,7 @@ impl PathBuilder {
     }
 
     /// Clears both path and query parameter.
+    #[cfg(feature = "generic_param")]
     pub fn cleared_param<K>(mut self, key: &K) -> Self
     where
         K: Borrow<str> + ?Sized,
@@ -809,6 +815,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "generic_param")]
     #[test]
     fn test_mixed_params() {
         static SEGMENTS: &[PathSegment] = &[PathSegment::Param("a")];

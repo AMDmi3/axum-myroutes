@@ -13,7 +13,9 @@ documentation.workspace = true
 keywords.workspace = true
 
 [features]
+default = ["generic_param"]
 nightly = ["axum-myroutes-macros/nightly"]
+generic_param = []
 
 [dependencies]
 axum = "0.8.8"

@@ -272,10 +272,13 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
 
                 let mut url_for_self = route.url_for();
                 for (k, v) in path_params {
-                    url_for_self = url_for_self.param(k, v);
+                    url_for_self = url_for_self
+                        .path_param(k, v)
+                        .map_err(|_| ::axum_myroutes::__private::axum::http::StatusCode::INTERNAL_SERVER_ERROR)?;
                 }
                 for (k, v) in query_params {
-                    url_for_self = url_for_self.query_param(k, v);
+                    url_for_self = url_for_self
+                        .query_param(k, v);
                 }
 
                 ::core::result::Result::Ok(::core::option::Option::Some(Self {
