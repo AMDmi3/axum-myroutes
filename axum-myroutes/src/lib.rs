@@ -337,9 +337,9 @@ pub enum PathBuilderError {
     #[error("missing path parameter {0}")]
     MissingPathParam(&'static str),
     #[error("invalid path parameter {0}")]
-    InvalidPathParam(String, PathBuilder),
+    InvalidPathParam(String, Box<PathBuilder>),
     #[error("incompatible paths")]
-    IncompatiblePaths(PathBuilder),
+    IncompatiblePaths(Box<PathBuilder>),
 }
 
 /// Route path builder.
@@ -418,7 +418,7 @@ impl PathBuilder {
     {
         let key: String = key.into();
         if !has_path_param(self.path_segments, &key) {
-            return Err(PathBuilderError::InvalidPathParam(key, self));
+            return Err(PathBuilderError::InvalidPathParam(key, Box::new(self)));
         }
         self.path_params.insert(key, format!("{}", value));
         Ok(self)
@@ -433,7 +433,10 @@ impl PathBuilder {
     {
         let key = key.borrow();
         if !has_path_param(self.path_segments, key) {
-            return Err(PathBuilderError::InvalidPathParam(key.to_string(), self));
+            return Err(PathBuilderError::InvalidPathParam(
+                key.to_string(),
+                Box::new(self),
+            ));
         }
         self.path_params.remove(key);
         Ok(self)
@@ -566,7 +569,7 @@ impl PathBuilder {
     /// Fills parameters and fragment from another instance of `PathBuilder`.
     pub fn filled_from(mut self, other: &Self) -> Result<Self, PathBuilderError> {
         if !are_paths_compatible(self.path_segments, other.path_segments) {
-            return Err(PathBuilderError::IncompatiblePaths(self));
+            return Err(PathBuilderError::IncompatiblePaths(Box::new(self)));
         }
         self.path_params = other.path_params.clone();
         self.query_params = other.query_params.clone();
