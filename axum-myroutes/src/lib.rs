@@ -306,6 +306,7 @@ use indexmap::IndexMap;
 /// Additionally, extractor type is generated, named with `My` prefix (e.g.
 /// `MyRoute` for `enum Route`), with methods similar to that of an enum:
 ///
+/// - `base() -> <enum type>` - returns base route enum variant.
 /// - `path() -> &'static str` - returns route path, as specified in the attribute.
 /// - `name() -> &'static str` - returns route enum variant name.
 /// - `props() -> <props_type>` (`static_props` is false) or

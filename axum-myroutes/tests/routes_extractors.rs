@@ -21,7 +21,8 @@ enum Route {
 
 async fn foo(route: MyRoute, Path(id): Path<u64>) -> String {
     format!(
-        "handler=foo, route={}, someprop={}, to_self={}, to_next={}, to_other={}",
+        "handler=foo, base={}, route={}, someprop={}, to_self={}, to_next={}, to_other={}",
+        route.base().name(),
         route.name(),
         route.props().someprop,
         route.url_for().build().unwrap(),
@@ -32,7 +33,8 @@ async fn foo(route: MyRoute, Path(id): Path<u64>) -> String {
 
 async fn bar(route: MyRoute, Path(id): Path<u64>) -> String {
     format!(
-        "handler=bar, route={}, someprop={}, to_self={}, to_next={}, to_other={}",
+        "handler=bar, base={}, route={}, someprop={}, to_self={}, to_next={}, to_other={}",
+        route.base().name(),
         route.name(),
         route.props().someprop,
         route.url_for().build().unwrap(),
@@ -49,12 +51,12 @@ async fn test_routes_and_extractors() {
     let response = test_server.get("/foo/1").await;
     response.assert_status_ok();
     response.assert_text(
-        "handler=foo, route=Foo, someprop=false, to_self=/foo/1, to_next=/foo/2, to_other=/bar/1",
+        "handler=foo, base=Foo, route=Foo, someprop=false, to_self=/foo/1, to_next=/foo/2, to_other=/bar/1",
     );
 
     let response = test_server.get("/bar/2").await;
     response.assert_status_ok();
     response.assert_text(
-        "handler=bar, route=Bar, someprop=true, to_self=/bar/2, to_next=/bar/3, to_other=/foo/2",
+        "handler=bar, base=Bar, route=Bar, someprop=true, to_self=/bar/2, to_next=/bar/3, to_other=/foo/2",
     );
 }

@@ -1,5 +1,9 @@
 # Changelog
 
+## unreleased
+
+- **added**: `base()` method for route extractor.
+
 ## 0.1.1
 
 - **added**: `clear_{param,query_param,fragment}` methods for `PathBuilder`.

@@ -209,6 +209,10 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
         }
 
         impl #extractor_ident {
+            pub fn base(&self) -> #enum_ident {
+                self.route.clone()
+            }
+
             pub fn path(&self) -> &'static str {
                 self.route.path()
             }
