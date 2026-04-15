@@ -424,7 +424,7 @@ impl PathBuilder {
         if !has_path_param(self.path_segments, &key) {
             return Err(PathBuilderError::InvalidPathParam(key, Box::new(self)));
         }
-        self.path_params.insert(key, format!("{}", value));
+        self.path_params.insert(key, format!("{value}"));
         Ok(self)
     }
 
@@ -469,7 +469,7 @@ impl PathBuilder {
         K: Into<String>,
         V: std::fmt::Display,
     {
-        self.query_params.insert(key.into(), format!("{}", value));
+        self.query_params.insert(key.into(), format!("{value}"));
         self
     }
 
@@ -513,9 +513,9 @@ impl PathBuilder {
     {
         let key: String = key.into();
         if has_path_param(self.path_segments, &key) {
-            self.path_params.insert(key, format!("{}", value));
+            self.path_params.insert(key, format!("{value}"));
         } else {
-            self.query_params.insert(key, format!("{}", value));
+            self.query_params.insert(key, format!("{value}"));
         }
         self
     }
@@ -553,7 +553,7 @@ impl PathBuilder {
     where
         S: std::fmt::Display,
     {
-        self.fragment = Some(format!("{}", fragment));
+        self.fragment = Some(format!("{fragment}"));
         self
     }
 
