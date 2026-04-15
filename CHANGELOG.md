@@ -1,5 +1,9 @@
 # Changelog
 
+## unreleased
+
+- **changed**: Depend on minimal set of `axum` features
+
 ## 0.2.1
 
 - **added**: `param()`, `cleared_param()` methods are now under `generic_param` crate
