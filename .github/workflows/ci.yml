@@ -23,11 +23,9 @@ jobs:
           toolchain: ${{ matrix.rust }}
           components: rustfmt,clippy
       - uses: Swatinem/rust-cache@v2
-      - name: Test
-        run: cargo test ${{ matrix.cargo_args }}
       - name: Format check
         run: cargo fmt --check
       - name: Clippy check
         run: cargo clippy --all-targets
-        env:
-          CARGO_TARGET_DIR: target/clippy  # avoid overwriting normal build artifacts
+      - name: Test
+        run: cargo test ${{ matrix.cargo_args }}
