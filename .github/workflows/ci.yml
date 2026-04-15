@@ -23,6 +23,9 @@ jobs:
           toolchain: ${{ matrix.rust }}
           components: rustfmt,clippy
       - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/master' }}
+          cache-bin: "false"
       - name: Format check
         run: cargo fmt --check
       - name: Clippy check
