@@ -3,25 +3,3 @@ error: expected route path as the first argument
    |
 13 |     #[get()]
    |           ^
-
-error[E0425]: cannot find type `Route` in this scope
-  --> tests/ui/fail_route_attr_empty_args.rs:10:10
-   |
-10 | #[derive(Clone)]
-   |          ^^^^^ not found in this scope
-   |
-help: consider importing this struct
-   |
- 4 + use axum::routing::Route;
-   |
-
-error[E0433]: failed to resolve: use of undeclared type `Route`
-  --> tests/ui/fail_route_attr_empty_args.rs:10:10
-   |
-10 | #[derive(Clone)]
-   |          ^^^^^ use of undeclared type `Route`
-   |
-help: consider importing this struct
-   |
- 4 + use axum::routing::Route;
-   |
