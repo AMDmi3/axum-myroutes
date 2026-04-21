@@ -28,7 +28,7 @@ url-escape = "0.1.1"
 anyhow = "1.0.102"
 axum = "0.8.8"
 axum-test = "20.0.0"
-tokio = { version = "1.51.1", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.52.1", features = ["macros", "rt-multi-thread"] }
 trybuild = "1.0.116"
 
 [lints]
