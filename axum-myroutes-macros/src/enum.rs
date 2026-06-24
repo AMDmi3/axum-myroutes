@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Dmitry Marakasov <amdmi3@amdmi3.ru>
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use itertools::Itertools;
 use proc_macro::TokenStream;
 use syn::{ItemEnum, spanned::Spanned};
 
@@ -33,7 +32,7 @@ impl Enum {
             .variants
             .into_iter()
             .map(Variant::parse)
-            .try_collect()?;
+            .collect::<syn::Result<_>>()?;
 
         Ok(Enum {
             vis: r#enum.vis,
