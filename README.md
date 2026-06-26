@@ -1,5 +1,9 @@
 # axum-myroutes
 
+[![Build status](https://github.com/AMDmi3/axum-myroutes/actions/workflows/ci.yml/badge.svg)](https://github.com/AMDmi3/axum-myroutes/actions/workflows/ci.yml)
+[![Crates.io](https://img.shields.io/crates/v/axum-myroutes)](https://crates.io/crates/axum-myroutes)
+[![Documentation](https://docs.rs/axum-myroutes/badge.svg)](https://docs.rs/axum-myroutes)
+
 This crate provides convenient and reliable way to work with routes in `axum`. Define routes along with their methods, paths and handlers in an enum, add these to `axum::Router` with a single call, then refer to any route (and construct a link to it) via corresponding enum variant, which provides compile time checked internal links for your application. Also, axum extractor is provided for handlers to be aware of their routes, and capable of constructing links to themselves.
 
 ## Features
