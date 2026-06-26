@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3
+
+- **changed**: Remove `itertool` dependency
+
 ## 0.2.2
 
 - **changed**: Depend on minimal set of `axum` features

@@ -92,7 +92,7 @@ dependencies = [
 
 [[package]]
 name = "axum-myroutes"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "axum",
@@ -107,7 +107,7 @@ dependencies = [
 
 [[package]]
 name = "axum-myroutes-macros"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "proc-macro2",
  "quote",
