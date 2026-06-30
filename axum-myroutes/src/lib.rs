@@ -633,7 +633,7 @@ impl PathBuilder {
 
         if let Some(fragment) = &self.fragment {
             res += "#";
-            res += &url_escape::encode_component(&fragment);
+            res += &url_escape::encode_fragment(&fragment);
         }
 
         Ok(res)
@@ -678,7 +678,7 @@ mod tests {
                 .fragment("%/%#")
                 .build()
                 .unwrap(),
-            "%25%2F%25%23?b=%25%2F%25%23#%25%2F%25%23"
+            "%25%2F%25%23?b=%25%2F%25%23#%/%#"
         );
     }
 
