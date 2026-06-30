@@ -94,7 +94,6 @@ dependencies = [
 name = "axum-myroutes"
 version = "0.2.3"
 dependencies = [
- "anyhow",
  "axum",
  "axum-myroutes-macros",
  "axum-test",
