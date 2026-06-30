@@ -586,7 +586,7 @@ impl PathBuilder {
     /// Builds a path.
     ///
     /// Fills a path pattern with provided parameters, adding query parameters
-    /// and fragment if nevessary, returning complete path which may be used
+    /// and fragment if necessary, returning complete path which may be used
     /// as an internal link.
     ///
     /// All provided values are escaped with `url_escape::encode_component`,
