@@ -493,7 +493,7 @@ impl PathBuilder {
     /// Retains only query parameters.
     ///
     /// Clears path parameters and the fragment.
-    pub fn retained_query_params<K>(mut self) -> Self {
+    pub fn retained_query_params(mut self) -> Self {
         self.path_params.clear();
         self.fragment = None;
         self
