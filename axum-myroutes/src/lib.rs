@@ -266,10 +266,11 @@ use indexmap::IndexMap;
 ///   on its route attribute.
 /// - `static_props` (default false) - whether route properties are statically
 ///   constructed (otherwise they are constructed on each access). This matters
-///   if properties contain heavy data, but require `const` construction.
+///   if properties contain heavy data, but requires `const` construction which
+///   is not possible for all types.
 /// - `default_props` (default true) - whether route properties have default value.
-///   If true, this requires `Default` trait to be implemented on the props type,
-///   in which case you may
+///   If true, `Default` trait must be implemented on the props type, and you may
+///   omit `props = ` attributes on route variants to use it.
 ///
 /// Note that `static_props = true, default_props = true` case currently requires
 /// rust nightly and `nightly` feature enabled for this crate, as it depends on a
