@@ -160,7 +160,7 @@ pub fn generate(r#enum: Enum) -> syn::Result<TokenStream> {
                     ::axum_myroutes::__private::axum::Router::<#state_type>
                 ) -> ::axum_myroutes::__private::axum::Router::<#state_type>
             {
-                let router = axum_myroutes::__private::axum::Router::new();
+                let router = ::axum_myroutes::__private::axum::Router::new();
                 #(#routes)*
                 router
             }
