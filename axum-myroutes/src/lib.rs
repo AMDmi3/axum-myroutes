@@ -147,7 +147,7 @@
 //! # }
 //! async fn item_by_id(route: MyRoute) {
 //!     // Same methods as route variant
-//!     assert_eq!(route.path(), "/");
+//!     assert_eq!(route.path(), "/{id}");
 //!     assert_eq!(route.name(), "ItemById");
 //!     assert_eq!(route.props().require_auth, false);
 //!
