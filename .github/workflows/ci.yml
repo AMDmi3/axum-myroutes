@@ -14,7 +14,7 @@ jobs:
           - { name: "Rust 1.88",         rust: "1.88",             cargo_args: "-- --skip ui" }
           - { name: "Rust stable",       rust: stable,             cargo_args: "" }
           - { name: "Rust stable + NDF", rust: stable,             cargo_args: "--no-default-features" }
-          - { name: "Rust nightly",      rust: nightly-2026-04-06, cargo_args: "--features=nightly -- --skip ui" }
+          - { name: "Rust nightly",      rust: nightly-2026-06-29, cargo_args: "--features=nightly -- --skip ui" }
       fail-fast: false
     runs-on: ubuntu-latest
     name: ${{ matrix.name }}
