@@ -294,7 +294,7 @@ use indexmap::IndexMap;
 /// - `path() -> &'static str` - returns route path, as specified in the attribute.
 /// - `name() -> &'static str` - returns route enum variant name.
 /// - `props() -> <props_type>` (`static_props` is false) or
-///   `props() -> &'static <props_type>` (`static_props` is trie) - returns properties
+///   `props() -> &'static <props_type>` (`static_props` is true) - returns properties
 ///   defined for a route.
 /// - `url_for() -> PathBuilder` - returns a path constructor for this route.
 /// - `to_router() -> axum::Router` - creates [`axum::Router`] from the routes defined
@@ -313,7 +313,7 @@ use indexmap::IndexMap;
 /// - `path() -> &'static str` - returns route path, as specified in the attribute.
 /// - `name() -> &'static str` - returns route enum variant name.
 /// - `props() -> <props_type>` (`static_props` is false) or
-///   `props() -> &'static <props_type>` (`static_props` is trie) - returns properties
+///   `props() -> &'static <props_type>` (`static_props` is true) - returns properties
 ///   defined for a route.
 /// - `url_for_self() -> &PathBuilder` - returns a reference to path constructor for
 ///   this route with all parameters filled from the request, capable of building a
