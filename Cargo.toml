@@ -10,7 +10,6 @@ description = "Declare axum routes as enum, use to construct urls"
 rust-version = "1.88"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
-homepage = "https://github.com/AMDmi3/axum-myroutes"
 repository = "https://github.com/AMDmi3/axum-myroutes"
 documentation = "https://docs.rs/axum-myroutes"
 keywords = ["axum", "route", "routes", "extractor", "url_for"]
