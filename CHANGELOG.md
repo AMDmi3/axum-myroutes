@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1
+- **fixed**: update UI tests for current stable rust (1.100) and ignore
+  on nightly due to unstable compiler output
+- **fixed**: remove redundant `homepage` field from cargo
+
 ## 0.3.0
 
 - **breaking**: Remove stray generic parameter from `retained_query_params`
